@@ -1,9 +1,12 @@
 models:
   - formula: "~ treatment"
     contrasts:
-      - id: treatment_mCherry_hND6_
+      - id: "treatment_mCherry_hND6"
         comparison: ["treatment", "mCherry", "hND6"]
 
-      - id: treatment_mCherry_hND6_sample_number
+      - id: "treatment_mCherry_hND6_sample_number"
         comparison: ["treatment", "mCherry", "hND6"]
-        blocking_factors: ["sample_number"]
+        blocking_factors: ["sample_number23"]
+
+      - id: "treatment234"
+        comparison: ["treatment", "GFP", "hND1000"]
