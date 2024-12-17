@@ -6,7 +6,7 @@ models:
 
       - id: "treatment_mCherry_hND6_sample_number"
         comparison: ["treatment", "mCherry", "hND6"]
-        blocking_factors: ["sample_number23"]
+        blocking_factors: ["sample_number"]
 
       - id: "treatment234"
-        comparison: ["treatment", "GFP", "hND1000"]
+        comparison: ["treatment", "mCherry", "hND6"]
