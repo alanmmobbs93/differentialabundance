@@ -1,0 +1,39 @@
+nextflow_process {
+
+    name "Test Process VALIDATE_MODEL"
+    script "../main.nf"
+    process "VALIDATE_MODEL"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "models"
+    tag "yml"
+    tag "samplesheet"
+
+    test("Samplesheet - YML file - RNASEQ TEST") {
+
+        when {
+            params {
+                observations_id_col = 'sample'
+            }
+            process {
+                """
+                // Samplesheet
+                input[0] =
+                    Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/mus_musculus/rnaseq_expression/SRP254919.samplesheet.csv', checkIfExists: true)
+
+                // Models_yml sheet
+                input[1] =
+                    Channel.fromPath('${moduleDir}/tests/contrasts.yml', checkIfExists: true)
+                        .map{ [ [id: "test_yml"], it ] }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success }
+            )
+        }
+    }
+}

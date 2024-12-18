@@ -2,41 +2,52 @@
 
 ## TODO: add make contrast arguments
 
-# Load required libraries
+# LOAD LIBRARIES ----------------------------------------------------
 suppressWarnings(suppressMessages({
     library(tidyverse)
     library(optparse)
     library(yaml)
-    #library(readr)
-    #library(dplyr)
+    library(jsonlite)
 }))
 
-# Define command-line arguments
+# PARSE ARGUMENTS ---------------------------------------------------
+## Generate list
 option_list <- list(
     make_option(c("-y", "--yml"), type = "character", default = NULL,
                 help = "Path to the models.yml file", metavar = "character"),
     make_option(c("-s", "--samplesheet"), type = "character", default = NULL,
                 help = "Path to the samplesheet CSV file", metavar = "character"),
-    make_option(c("-i", "--sample"), type = "character", default = "sample",
+    make_option(c("-i", "--sample_id_col"), type = "character", default = "sample",
                 help = "Column that contains sample identificators", metavar = "character")
 )
 
-# Parse command-line arguments
-opt_parser <- OptionParser(option_list = option_list)
+## Parse command-line arguments
+opt_parser <-
+    OptionParser(
+        option_list = option_list,
+        description = "Validate a sample sheet against a YML file for model designs.",
+        epilogue =
+        "
+        The process will look for variables and factors in the YML file and validate that they are present in the sample sheet.
+        Will also look for unwanted characters within columns and colnames.
+        Finally, will evaluate all model designs based on the formula and contrasts to find whether the models are full ranked or not.
+        "
+    )
 opt <- parse_args(opt_parser)
 
-# Validate input arguments
-## Required arguments
-if (is.null(opt$models) || is.null(opt$samplesheet) ) {
-    stop("'--yml', '--samplesheet' and '--sample' arguments are required.", call. = FALSE)
+## Validate input arguments
+### Required arguments
+if (is.null(opt$yml) || is.null(opt$samplesheet) ) {
+    stop("'--yml' and '--samplesheet' arguments are required.", call. = FALSE)
 }
 
-## Collect parameters
-path_yml <- "/workspace/differentialabundance/modules/local/validate_model/input_test/contrasts.yml" #opt$models
-path_samplesheet <- "/workspace/differentialabundance/results/SRP254919.samplesheet.csv" #opt$samplesheet
-sample_column <- "sample" #opt$sample
+### Collect parameters (easier for dev and testing)
+path_yml         <- opt$yml             # "/workspace/differentialabundance/modules/local/validate_model/input_test/contrasts.yml" #
+path_samplesheet <- opt$samplesheet     # "/workspace/differentialabundance/results/SRP254919.samplesheet.csv" #
+sample_column    <- opt$sample_id_col   # "sample" #
 
-# Load models.yml file
+# LOAD FILES --------------------------------------------------------
+## Load models.yml file
 tryCatch({
     models <- read_yaml(path_yml)
     cat("Loaded YML file successfully.\n")
@@ -44,7 +55,7 @@ tryCatch({
     stop("Error loading YML file: ", e$message)
 })
 
-# Load samplesheet CSV file
+## Load samplesheet CSV file
 tryCatch({
     samplesheet <- readr::read_csv(path_samplesheet, show_col_types = FALSE)
     if ( !sample_column %in% colnames(samplesheet) ) {
@@ -55,47 +66,56 @@ tryCatch({
     stop("Error loading samplesheet CSV: ", e$message)
 })
 
+# PARSE FACTORS/LEVELS FROM YML FILE --------------------------------
 ## Collect all variables and factors from the yml file
-var <- list(); contrasts_list <- list(); for (FORMULA in models$models) {
+## * var_list:        collects all factors levels for each variable.
+## * contrast_list:   collects info for each contrast
 
-    ## Populate list
+### Initialize empty lists
+var <- list()
+contrasts_list <- list()
+
+## Iterate through models (formula)
+for (FORMULA in models$models) {
+
+    ## Iterate through contrasts for each model (formula)
     for (CONTRAST in FORMULA$contrasts) {
-        ## Get column name: first comparison's element
+        ### Get column name: first comparison's element
         name <- CONTRAST$comparison[1]
 
-        ## Get factors
+        ### Get factors (rest of components)
         variables <- CONTRAST$comparison[2:length(CONTRAST$comparison)]
 
-        ## Populate contrasts_list for model validation
-        contrasts_list[[ CONTRAST$id ]] <- list(
+        ### Populate contrasts_list for later model validation
+        contrasts_list[[ CONTRAST$id ]] <- list(                ## Adds the ID as main identifier
             "formula" = FORMULA$formula,
             "variable" = name,
             "contrast" = variables,
-            "blocking_factors" = CONTRAST$blocking_factors
+            "blocking_factors" = CONTRAST$blocking_factors      ## This list can be later extended for "make_contrast" option is required
         )
 
-        ## If the column is already present in the list, add more components to it
+        ### Start populating the variables_list
+        #### If the column is already present in the list, add more components to it
         if (name %in% names(var) ) {
-            variables <- unique( c(var[[ name ]], CONTRAST$comparison[2:3] ))
-            var[[ name ]] <- variables
-            cat("Duplicated variable: ", name, ". Adding more factors to it.\n", sep = "")
-        ## Default to new variable
+            variables <- unique( c(var[[ name ]], variables )) ## Combine previous levels with the new ones without duplicating them
+            var[[ name ]] <- variables                         ## assign the values to the list
+            #cat("Duplicated variable: ", name, ". Adding more factors to it.\n", sep = "")
+        #### Default to new element
         } else {
-            cat("Detected variable:", name, "\n")
-            var[[ length(var) + 1 ]] <- variables
-            names(var)[length(var) ] <- name
+            #cat("Detected variable:", name, "\n")
+            var[[ length(var) + 1 ]] <- variables              ## Asign levels to a new entry
+            names(var)[length(var) ] <- name                   ## Specify the variable name
         }
 
         ## Get blocking factors
         blocking <- c()
-        if ( !is.null(CONTRAST$blocking_factors) ) {
-            cat("Blocking factors detected for variable", name, "\n")
+        if ( !is.null(CONTRAST$blocking_factors) ) { ## Check if they were defined in the yml
+            #cat("Blocking factors detected for variable", name, "\n")
             blocking <- CONTRAST$blocking_factors
-            cat(paste(blocking, collapse = ""), "\n")
         }
 
-        ## Add blockig variables
-        if ( "blocking_factors" %in% names(var) ) {
+        ## Add blocking variables
+        if ( "blocking_factors" %in% names(var) ) { ## Check if the category exists from previous iterations
             var[[ "blocking_factors" ]] <- unique( c( var[[ "blocking_factors" ]], blocking ))
         } else {
             var[[ "blocking_factors" ]] <- unique( blocking )
@@ -103,18 +123,14 @@ var <- list(); contrasts_list <- list(); for (FORMULA in models$models) {
     }
 }
 
-## Print explicit message
+## Print explicit messages
 for (INDEX in 1:length(var)) {
-    cat("Detected '", names(var)[INDEX], "' variable with ", paste(var[[INDEX]], collapse = " "), " levels.\n", sep = "")
+    cat("\033[32mDetected '", names(var)[INDEX], "' variable with ", paste(var[[INDEX]], collapse = " "), " levels.\033[0m \n", sep = "")
 }
 
-
-## Function to validate the samplesheet against the yml file
-validate_model <- function(sample_column, variables, samplesheet) { # variables: list; samplesheet: df
-
-    #variables   <- var
-    #samplesheet <- samplesheet
-    undesired_chars <- "[^a-zA-Z0-9_]"
+# VALIDATE SAMPLESHEET BASED ON YML FILE ----------------------------
+## Define function to compare YML and samplesheet
+validate_model <- function(sample_column, variables, samplesheet) { # sample_column: string; variables: list; samplesheet: df
 
     #######################################################
     ##
@@ -144,7 +160,10 @@ validate_model <- function(sample_column, variables, samplesheet) { # variables:
     # Initialize vector to report continuos variables
     continuous <- c()
 
-    ## Check samplesheet names for invalid characters
+    ## Do not allow special characters
+    undesired_chars <- "[^a-zA-Z0-9_.]"
+
+    ## Check samplesheet names for invalid colnames
     df_colnames <- names(samplesheet)
     true_columns <- stringr::str_detect(df_colnames, pattern = regex(undesired_chars))
 
@@ -247,57 +266,80 @@ validate_model <- function(sample_column, variables, samplesheet) { # variables:
         }
     }
 
+    ## Report if any variable was imported as continuous
     if ( !is.null(continuous)) {
         warnings <- c(warnings, paste0("The following continuous variables were detected or coerced into numeric: ", paste(continuous, collapse = "" )))
     }
 
+    ## Report ERRORS and stop
     if (length(errors) > 0 ) {
         stop(cat("Some errors where found while validating the samplesheet and models definitions:\n", paste(errors, collapse = "\n"), "\n", sep = ""))
     }
 
-    ## Generate validated samplesheet
+    ## Generate validated phenotypic table
     tryCatch({
+        ## Get desired columns, starting with the one containing sample identificators
         selected_columns <- c( sample_column, names(variables)[ names(variables) != "blocking_factors" ], blocking_factors)
         pheno_table      <- samplesheet %>% dplyr::select(all_of(selected_columns))
+
     }, error = function(e) {
-        stop("Error generating validated samplesheet: ", e$message)
+        stop("Error generating validated phenotypic table: ", e$message)
     })
 
-    return(list( 'pheno_table' = pheno_table, 'errors' = errors, 'warnings' = warnings) )
+    ## Return list
+    return(list( 'pheno_table' = pheno_table, 'warnings' = warnings) )
 
 }
 
 ## Collect all outputs from function: errors must be empty, warnings can have messages
-phenotable_errors_warnings <- validate_model(sample_column, var, samplesheet)
+phenotable_warnings <- validate_model(sample_column, var, samplesheet)
 
 ## Cat warnings messages
-cat(phenotable_errors_warnings[[ 3 ]], "\n")
+cat("\033[1;33m", paste(phenotable_warnings[[ 2 ]], collapse = "\n"), "\033[0m\n")
 
-## Get validated sample sheet
-pheno_table <- phenotable_errors_warnings[[ 1 ]]
+## Get validated pheno table
+pheno_table <- phenotable_warnings[[1]]
 
-## CHECK THAT THE MODELS ARE FULL RANKED
+## FUNCTION TO CHECK THAT THE MODELS ARE FULL RANKED
 check_model_contrasts <- function(contrasts_list, colData) {
+
+    #######################################################
+    ##
+    ## Function that takes a list with models + variables, and a phenotypic table
+    ##
+    ## The function evaluates that:
+    ## * The formulas are usable
+    ## * The models generated are full ranked
+    ##
+    ## Finally, the function returns
+    ## * An list with all designs
+    ## * full ranked: true/false
+    ##
+    ## If the error vector contains values, the script will end with a non-zero status.
+    ##
+    #######################################################
+
+    ### Initialize list for models descriptors
+    design_list <- list()
+    ### Iterate over each model
     for (model_name in names(contrasts_list)) {
 
-        # Extract model components
+        ## Extract model components
         model        <- contrasts_list[[model_name]]
-        base_formula <- as.formula(model$formula)  # Ensure formula object
+        base_formula <- as.formula(model$formula)
         variable     <- model$variable
         contrast     <- model$contrast
-        blocking     <- model$blocking_factor  # Extract blocking factor
+        blocking     <- model$blocking_factor
 
-        # Check if blocking factor is already in the formula
+        ## Check if blocking factor is already in the formula
         if (!is.null(blocking)) {
-            # Get terms from the formula
+            ## Get terms from the formula
             formula_terms <- all.vars(base_formula)
 
-            # If blocking factor is not already in the formula, add it
+            ## If blocking factor is not already in the formula, add it
             if (!(blocking %in% formula_terms)) {
-                #cat("\nAdding blocking factor:", blocking, "to the model.\n")
                 updated_formula <- as.formula(paste(deparse(base_formula), "+", blocking))
             } else {
-                #cat("\nBlocking factor:", blocking, "is already in the formula. Skipping addition.\n")
                 updated_formula <- base_formula
             }
         } else {
@@ -308,32 +350,37 @@ check_model_contrasts <- function(contrasts_list, colData) {
 
         # Build the design matrix
         design_matrix <- model.matrix(updated_formula, data = colData)
-        cat("Design matrix:\n")
         print(design_matrix)
 
         # Check the rank of the design matrix
         rank <- qr(design_matrix)$rank
         expected_rank <- ncol(design_matrix)
 
-        if (rank == expected_rank) {
-            cat("The design matrix is full rank.\n")
-        } else {
-            cat("WARNING: The design matrix is NOT full rank!\n")
-        }
-
-        # Check if contrast variable exists in colData
-        if (variable %in% colnames(colData)) {
-            factor_levels <- levels(factor(colData[[variable]], levels = contrast))
-            if (all(contrast %in% factor_levels)) {
-                cat("Contrast levels are valid:", paste(contrast, collapse = " vs "), "\n")
-            } else {
-                cat("ERROR: Contrast levels", paste(contrast, collapse = " vs "),
-                    "do not exist in", variable, "\n")
-            }
-        } else {
-            cat("ERROR: Contrast variable", variable, "is not in colData.\n")
-        }
+        ## Add results to list
+        design_list[[ length(design_list) + 1 ]] <- list(
+            "formula"       = deparse(updated_formula),
+            "design_matrix" = design_matrix,
+            "full_rank"     = rank == expected_rank
+        )
+        names(design_list)[ length(design_list) ]  <- model_name
     }
+
+    return(design_list)
 }
 
-check_model_contrasts(contrasts_list, pheno_table)
+design_results <- check_model_contrasts(contrasts_list, pheno_table)
+
+# EXPORT DATA -------------------------------------------------------
+## Export pheno table
+write_csv(pheno_table, "pheno_table.csv")
+
+## Export designs to JSON
+jsonlite::write_json(design_results, path = "designs.json", pretty = TRUE, auto_unbox = TRUE)
+
+## Export warnings
+if ( !is.null(phenotable_warnings[[ 2 ]]) ) {
+    jsonlite::write_json(phenotable_warnings[[ 2 ]], path = "warnings.json", pretty = TRUE)
+}
+
+## Export RData
+save.image("models.RData")
