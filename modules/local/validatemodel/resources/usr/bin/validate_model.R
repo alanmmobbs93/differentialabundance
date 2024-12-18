@@ -42,8 +42,8 @@ if (is.null(opt$yml) || is.null(opt$samplesheet) ) {
 }
 
 ### Collect parameters (easier for dev and testing)
-path_yml         <- opt$yml             # "/workspace/differentialabundance/modules/local/validate_model/input_test/contrasts.yml" #
-path_samplesheet <- opt$samplesheet     # "/workspace/differentialabundance/results/SRP254919.samplesheet.csv" #
+path_yml         <- opt$yml             # "/workspace/differentialabundance/modules/local/validatemodel/tests/contrasts.yml" #
+path_samplesheet <- opt$samplesheet     # "/workspace/differentialabundance/results/SRP254919.samplesheet_witherrors.csv" #
 sample_column    <- opt$sample_id_col   # "sample" #
 
 # LOAD FILES --------------------------------------------------------
@@ -71,57 +71,98 @@ tryCatch({
 ## * var_list:        collects all factors levels for each variable.
 ## * contrast_list:   collects info for each contrast
 
-### Initialize empty lists
-var <- list()
-contrasts_list <- list()
+process_models <- function(models) {
+    # Initialize lists to store the output
+    contrasts_list <- list()
+    var <- list()
 
-## Iterate through models (formula)
-for (FORMULA in models$models) {
+    # Ensure models$models is not null or empty
+    if (is.null(models$models) || length(models$models) == 0) {
+        stop("models$models is null or empty. Please provide valid input.")
+    }
 
-    ## Iterate through contrasts for each model (formula)
-    for (CONTRAST in FORMULA$contrasts) {
-        ### Get column name: first comparison's element
-        name <- CONTRAST$comparison[1]
+    # Temporary storage for gathering contrasts per variable
+    temp_var <- list()
+    blocking_vars <- c()
 
-        ### Get factors (rest of components)
-        variables <- CONTRAST$comparison[2:length(CONTRAST$comparison)]
+    # Iterate through models (formula)
+    for (FORMULA in models$models) {
 
-        ### Populate contrasts_list for later model validation
-        contrasts_list[[ CONTRAST$id ]] <- list(                ## Adds the ID as main identifier
-            "formula" = FORMULA$formula,
-            "variable" = name,
-            "contrast" = variables,
-            "blocking_factors" = CONTRAST$blocking_factors      ## This list can be later extended for "make_contrast" option is required
-        )
-
-        ### Start populating the variables_list
-        #### If the column is already present in the list, add more components to it
-        if (name %in% names(var) ) {
-            variables <- unique( c(var[[ name ]], variables )) ## Combine previous levels with the new ones without duplicating them
-            var[[ name ]] <- variables                         ## assign the values to the list
-            #cat("Duplicated variable: ", name, ". Adding more factors to it.\n", sep = "")
-        #### Default to new element
-        } else {
-            #cat("Detected variable:", name, "\n")
-            var[[ length(var) + 1 ]] <- variables              ## Asign levels to a new entry
-            names(var)[length(var) ] <- name                   ## Specify the variable name
+        # Ensure FORMULA$contrasts is not null or empty
+        if (is.null(FORMULA$contrasts) || length(FORMULA$contrasts) == 0) {
+            stop("FORMULA$contrasts is null or empty. Unable to proceed with this model.")
         }
 
-        ## Get blocking factors
-        blocking <- c()
-        if ( !is.null(CONTRAST$blocking_factors) ) { ## Check if they were defined in the yml
-            #cat("Blocking factors detected for variable", name, "\n")
-            blocking <- CONTRAST$blocking_factors
-        }
+        # Iterate through contrasts for each model (formula)
+        for (CONTRAST in FORMULA$contrasts) {
 
-        ## Add blocking variables
-        if ( "blocking_factors" %in% names(var) ) { ## Check if the category exists from previous iterations
-            var[[ "blocking_factors" ]] <- unique( c( var[[ "blocking_factors" ]], blocking ))
-        } else {
-            var[[ "blocking_factors" ]] <- unique( blocking )
+            # Validate CONTRAST$id
+            if (is.null(CONTRAST$id)) {
+                stop("Missing CONTRAST$id detected. Unable to proceed.")
+            }
+
+            if (CONTRAST$id %in% names(contrasts_list)) {
+                stop(paste("Duplicate CONTRAST$id detected:", CONTRAST$id, ". Unable to proceed."))
+            }
+
+            # Get column name: first comparison's element
+            name <- CONTRAST$comparison[1]
+
+            # Check if name is valid
+            if (is.null(name) || name == "") {
+                stop("Invalid name detected in CONTRAST$comparison. Unable to proceed.")
+            }
+
+            # Get factors (rest of components)
+            variables <- CONTRAST$comparison[2:length(CONTRAST$comparison)]
+
+            # Populate contrasts_list for later model validation
+            contrasts_list[[CONTRAST$id]] <- list(
+                "formula" = FORMULA$formula,
+                "variable" = name,
+                "contrast" = variables,
+                "blocking_factors" = CONTRAST$blocking_factors
+            )
+
+            # Gather contrasts per variable into temporary storage
+            if (name %in% names(temp_var)) {
+                temp_var[[name]] <- unique(c(temp_var[[name]], variables))
+            } else {
+                temp_var[[name]] <- variables
+            }
+
+            # Gather blocking factors
+            if (!is.null(CONTRAST$blocking_factors)) {
+                blocking_vars <- unique(c(blocking_vars, CONTRAST$blocking_factors))
+            }
         }
     }
+
+    # Consolidate gathered contrasts into `var`
+    for (name in names(temp_var)) {
+        if (name %in% names(var)) {
+            var[[name]] <- unique(c(var[[name]], temp_var[[name]]))
+        } else {
+            var[[name]] <- temp_var[[name]]
+        }
+    }
+
+    # Add blocking variables to `var`
+    var[[ "blocking_factors" ]] <- blocking_vars
+
+    # Return the populated lists
+    return(list(
+        contrasts_list = contrasts_list,
+        var = var
+    ))
 }
+
+## Process models
+models_lists   <- process_models(models)
+### Extract models contrasts
+contrasts_list <- models_lists[["contrasts_list"]]
+### Extract variables and levels
+var            <- models_lists[["var"]]
 
 ## Print explicit messages
 for (INDEX in 1:length(var)) {
@@ -221,7 +262,7 @@ validate_model <- function(sample_column, variables, samplesheet) { # sample_col
             }
 
             ## Check that the column data does not contain undesidered characters
-            if ( sum( stringr::str_detect(samplesheet[[ VARIABLE ]], pattern = undesired_chars )) > 0 ) {
+            if ( sum( stringr::str_detect( samplesheet[[ VARIABLE ]], pattern = regex(undesired_chars) ), na.rm = TRUE) > 0 ) {
                 errors <- c(errors,
                     paste0("Column ", VARIABLE, " contains undesired characters\n")
                 )
@@ -273,7 +314,7 @@ validate_model <- function(sample_column, variables, samplesheet) { # sample_col
 
     ## Report ERRORS and stop
     if (length(errors) > 0 ) {
-        stop(cat("Some errors where found while validating the samplesheet and models definitions:\n", paste(errors, collapse = "\n"), "\n", sep = ""))
+        stop(cat("\033[1;31mSome errors where found while validating the samplesheet and models definitions:\n", paste(errors, collapse = "\n"), "\033[0m\n", sep = ""))
     }
 
     ## Generate validated phenotypic table
@@ -350,7 +391,6 @@ check_model_contrasts <- function(contrasts_list, colData) {
 
         # Build the design matrix
         design_matrix <- model.matrix(updated_formula, data = colData)
-        print(design_matrix)
 
         # Check the rank of the design matrix
         rank <- qr(design_matrix)$rank
@@ -363,6 +403,13 @@ check_model_contrasts <- function(contrasts_list, colData) {
             "full_rank"     = rank == expected_rank
         )
         names(design_list)[ length(design_list) ]  <- model_name
+    }
+
+    for (DESIGN in names(design_list)) {
+        cat("Design ", DESIGN,
+            if( design_list[[ DESIGN ]]$full_rank ) { " is " } else { " is not "},
+            "full ranked\n", sep = ""
+        )
     }
 
     return(design_list)
