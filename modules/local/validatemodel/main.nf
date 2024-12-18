@@ -8,7 +8,7 @@ process VALIDATE_MODEL {
         'community.wave.seqera.io/library/r-jsonlite_r-optparse_r-tidyverse_r-yaml:18dc3fc2d990206d' }"
 
     input:
-    tuple path(samplesheet)
+    path samplesheet
     tuple val(meta), path(models_yml)
 
     output:
