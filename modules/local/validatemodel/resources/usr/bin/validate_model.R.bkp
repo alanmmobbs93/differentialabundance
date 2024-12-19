@@ -43,7 +43,7 @@ if (is.null(opt$yml) || is.null(opt$samplesheet) ) {
 
 ### Collect parameters (easier for dev and testing)
 path_yml         <- opt$yml             # "/workspace/differentialabundance/modules/local/validatemodel/tests/contrasts.yml" #
-path_samplesheet <- opt$samplesheet     # "/workspace/differentialabundance/results/SRP254919.samplesheet.csv" #
+path_samplesheet <- opt$samplesheet     # "/workspace/differentialabundance/results/SRP254919.samplesheet_witherrors.csv" #
 sample_column    <- opt$sample_id_col   # "sample" #
 
 # LOAD FILES --------------------------------------------------------
@@ -59,7 +59,7 @@ tryCatch({
 tryCatch({
     samplesheet <- readr::read_csv(path_samplesheet, show_col_types = FALSE)
     if ( !sample_column %in% colnames(samplesheet) ) {
-        stop(paste0("The sample identificator column '", sample_column, "' is not present in the samplesheet file") )
+        stop(paste0("Column ", sample_column, " not present in colnames(samplesheet)") )
     }
     cat("Loaded samplesheet successfully.\n")
 }, error = function(e) {
@@ -72,68 +72,78 @@ tryCatch({
 ## * contrast_list:   collects info for each contrast
 
 process_models <- function(models) {
-
     # Initialize lists to store the output
     contrasts_list <- list()
     var <- list()
 
     # Ensure models$models is not null or empty
-    if (is.null(models$contrasts) || length(models$contrasts) == 0) {
-        stop("models$contrasts is null or empty. Please provide valid input.")
+    if (is.null(models$models) || length(models$models) == 0) {
+        stop("models$models is null or empty. Please provide valid input.")
     }
 
     # Temporary storage for gathering contrasts per variable
     temp_var <- list()
     blocking_vars <- c()
 
-    for (CONTRAST in models$contrasts) {
+    # Iterate through models (formula)
+    for (FORMULA in models$models) {
 
-        # Validate CONTRAST$id
-        if (is.null(CONTRAST$id)) {
-            stop("Missing CONTRAST$id detected.")
+        # Ensure FORMULA$contrasts is not null or empty
+        if (is.null(FORMULA$contrasts) || length(FORMULA$contrasts) == 0) {
+            stop("FORMULA$contrasts is null or empty. Unable to proceed with this model.")
         }
 
-        if (CONTRAST$id %in% names(contrasts_list)) {
-            stop(paste0("Duplicate CONTRAST$id detected: ", CONTRAST$id, "."))
-        }
+        # Iterate through contrasts for each model (formula)
+        for (CONTRAST in FORMULA$contrasts) {
 
-        # Get column name: first comparison's element
-        variable <- CONTRAST$comparison[1]
+            # Validate CONTRAST$id
+            if (is.null(CONTRAST$id)) {
+                stop("Missing CONTRAST$id detected. Unable to proceed.")
+            }
 
-        # Check if name is valid
-        if (is.null(variable) || variable == "") {
-            stop("Invalid `variable` defined in `CONTRAST$comparison[1]`.")
-        }
+            if (CONTRAST$id %in% names(contrasts_list)) {
+                stop(paste("Duplicate CONTRAST$id detected:", CONTRAST$id, ". Unable to proceed."))
+            }
 
-        # Get factors (rest of components)
-        levels <- CONTRAST$comparison[2:length(CONTRAST$comparison)]
+            # Get column name: first comparison's element
+            name <- CONTRAST$comparison[1]
 
-        # Populate contrasts_list for later model validation
-        contrasts_list[[CONTRAST$id]] <- list(
-            "variable" = variable,
-            "contrast" = levels,
-            "blocking_factors" = CONTRAST$blocking_factors
-        )
+            # Check if name is valid
+            if (is.null(name) || name == "") {
+                stop("Invalid name detected in CONTRAST$comparison. Unable to proceed.")
+            }
 
-        # Gather contrasts per variable into temporary storage
-        if (variable %in% names(temp_var)) {
-            temp_var[[variable]] <- unique(c(temp_var[[variable]], levels))
-        } else {
-            temp_var[[variable]] <- levels
-        }
+            # Get factors (rest of components)
+            variables <- CONTRAST$comparison[2:length(CONTRAST$comparison)]
 
-        # Gather blocking factors
-        if (!is.null(CONTRAST$blocking_factors)) {
-            blocking_vars <- unique(c(blocking_vars, CONTRAST$blocking_factors))
+            # Populate contrasts_list for later model validation
+            contrasts_list[[CONTRAST$id]] <- list(
+                "formula" = FORMULA$formula,
+                "variable" = name,
+                "contrast" = variables,
+                "blocking_factors" = CONTRAST$blocking_factors
+            )
+
+            # Gather contrasts per variable into temporary storage
+            if (name %in% names(temp_var)) {
+                temp_var[[name]] <- unique(c(temp_var[[name]], variables))
+            } else {
+                temp_var[[name]] <- variables
+            }
+
+            # Gather blocking factors
+            if (!is.null(CONTRAST$blocking_factors)) {
+                blocking_vars <- unique(c(blocking_vars, CONTRAST$blocking_factors))
+            }
         }
     }
 
     # Consolidate gathered contrasts into `var`
-    for (variable in names(temp_var)) {
-        if (variable %in% names(var)) {
-            var[[variable]] <- unique(c(var[[variable]], temp_var[[variable]]))
+    for (name in names(temp_var)) {
+        if (name %in% names(var)) {
+            var[[name]] <- unique(c(var[[name]], temp_var[[name]]))
         } else {
-            var[[variable]] <- temp_var[[variable]]
+            var[[name]] <- temp_var[[name]]
         }
     }
 
@@ -150,9 +160,9 @@ process_models <- function(models) {
 ## Process models
 models_lists   <- process_models(models)
 ### Extract models contrasts
-contrasts_list <- models_lists[[ "contrasts_list" ]]
+contrasts_list <- models_lists[["contrasts_list"]]
 ### Extract variables and levels
-var            <- models_lists[[ "var" ]]
+var            <- models_lists[["var"]]
 
 ## Print explicit messages
 for (INDEX in 1:length(var)) {
@@ -251,7 +261,7 @@ validate_model <- function(sample_column, variables, samplesheet) { # sample_col
                 errors <- c(errors, paste0("Column ", VARIABLE, " contains NA/s in the following rows: ", paste(which(na_rows), collapse = " ")))
             }
 
-            ## Check that the column data does not contain undesired characters
+            ## Check that the column data does not contain undesidered characters
             if ( sum( stringr::str_detect( samplesheet[[ VARIABLE ]], pattern = regex(undesired_chars) ), na.rm = TRUE) > 0 ) {
                 errors <- c(errors,
                     paste0("Column ", VARIABLE, " contains undesired characters\n")
@@ -334,8 +344,6 @@ pheno_table <- phenotable_warnings[[1]]
 ## FUNCTION TO CHECK THAT THE MODELS ARE FULL RANKED
 check_model_contrasts <- function(contrasts_list, colData) {
 
-    #contrasts_list <- contrasts_list
-    #colData        <- pheno_table
     #######################################################
     ##
     ## Function that takes a list with models + variables, and a phenotypic table
@@ -356,26 +364,33 @@ check_model_contrasts <- function(contrasts_list, colData) {
     design_list <- list()
     ### Iterate over each model
     for (model_name in names(contrasts_list)) {
-        #model_name <- names(contrasts_list[2])
 
         ## Extract model components
         model        <- contrasts_list[[model_name]]
+        base_formula <- as.formula(model$formula)
         variable     <- model$variable
         contrast     <- model$contrast
-        blocking     <- model$blocking_factors
+        blocking     <- model$blocking_factor
 
-        ## Create formula
-        ### Gather components
-        formula_terms <- c(variable, blocking)
+        ## Check if blocking factor is already in the formula
+        if (!is.null(blocking)) {
+            ## Get terms from the formula
+            formula_terms <- all.vars(base_formula)
 
-        ### Convert into formula
-        # TODO: Add flexibility for interactive terms!
-        dynamic_formula <- as.formula(paste("~", paste(formula_terms, collapse = "+")))
+            ## If blocking factor is not already in the formula, add it
+            if (!(blocking %in% formula_terms)) {
+                updated_formula <- as.formula(paste(deparse(base_formula), "+", blocking))
+            } else {
+                updated_formula <- base_formula
+            }
+        } else {
+            updated_formula <- base_formula
+        }
 
-        cat("\nChecking:", model_name, "\nFormula:", deparse(dynamic_formula), "\n")
+        cat("\nChecking:", model_name, "\nFormula:", deparse(updated_formula), "\n")
 
         # Build the design matrix
-        design_matrix <- model.matrix(dynamic_formula, data = colData)
+        design_matrix <- model.matrix(updated_formula, data = colData)
 
         # Check the rank of the design matrix
         rank <- qr(design_matrix)$rank
@@ -383,7 +398,7 @@ check_model_contrasts <- function(contrasts_list, colData) {
 
         ## Add results to list
         design_list[[ length(design_list) + 1 ]] <- list(
-            "formula"       = deparse(dynamic_formula),
+            "formula"       = deparse(updated_formula),
             "design_matrix" = design_matrix,
             "full_rank"     = rank == expected_rank
         )
