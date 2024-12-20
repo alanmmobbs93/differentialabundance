@@ -465,7 +465,7 @@ workflow DIFFERENTIALABUNDANCE {
         CUSTOM_TABULARTOGSEACLS(ch_contrasts_and_samples)
 
         CUSTOM_TABULARTOGSEACHIP(
-            VALIDATOR.out.feature_meta.map{ it[1] },
+            VALIDATOR.out.feature_meta,
             [params.features_id_col, params.features_name_col]
         )
 
@@ -482,7 +482,7 @@ workflow DIFFERENTIALABUNDANCE {
         GSEA_GSEA(
             ch_gsea_inputs,
             ch_gsea_inputs.map{ tuple(it[0].reference, it[0].target) }, // *
-            CUSTOM_TABULARTOGSEACHIP.out.chip.first()
+            CUSTOM_TABULARTOGSEACHIP.out.chip.first().map{ it[1] }
         )
 
         // * Note: GSEA module currently uses a value channel for the mandatory
