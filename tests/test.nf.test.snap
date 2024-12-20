@@ -3,6 +3,9 @@
         "content": [
             21,
             {
+                "CUSTOM_TABULARTOGSEACHIP": {
+                    "gawk": "5.1.0"
+                },
                 "DESEQ2_DIFFERENTIAL": {
                     "r-base": "4.1.3",
                     "bioconductor-deseq2": "1.34.0"
@@ -22,9 +25,6 @@
                 },
                 "PLOT_EXPLORATORY": {
                     "r-shinyngs": "2.0.0"
-                },
-                "TABULAR_TO_GSEA_CHIP": {
-                    "bash": "5.2.21 3"
                 },
                 "VALIDATOR": {
                     "r-base": "4.3.3",
@@ -186,12 +186,15 @@
             "nf-test": "0.9.0",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2024-12-17T11:56:20.743162854"
+        "timestamp": "2024-12-20T16:13:56.445211657"
     },
     "Test profile with yaml contrasts": {
         "content": [
             21,
             {
+                "CUSTOM_TABULARTOGSEACHIP": {
+                    "gawk": "5.1.0"
+                },
                 "DESEQ2_DIFFERENTIAL": {
                     "r-base": "4.1.3",
                     "bioconductor-deseq2": "1.34.0"
@@ -211,9 +214,6 @@
                 },
                 "PLOT_EXPLORATORY": {
                     "r-shinyngs": "2.0.0"
-                },
-                "TABULAR_TO_GSEA_CHIP": {
-                    "bash": "5.2.21 3"
                 },
                 "VALIDATOR": {
                     "r-base": "4.3.3",
@@ -375,6 +375,6 @@
             "nf-test": "0.9.0",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2024-12-20T13:41:10.4647836"
+        "timestamp": "2024-12-20T16:16:49.167979669"
     }
 }
