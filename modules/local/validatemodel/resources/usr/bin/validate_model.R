@@ -49,15 +49,31 @@ sample_column    <- opt$sample_id_col   # "sample" #
 # LOAD FILES --------------------------------------------------------
 ## Load models.yml file
 tryCatch({
-    models <- read_yaml(path_yml)
+    if (!file.exists(path_yml)) {
+        stop(sprintf("File '%s' does not exist.", path_yml), call. = FALSE)
+    }
+    if (!grepl("\\.(yaml|yml)$", path_yml, ignore.case = TRUE)) {
+        stop(sprintf("File '%s' is not a YAML file (expected .yaml or .yml extension).", path_yml), call. = FALSE)
+    }
+    models <- yaml::read_yaml(path_yml)
     cat("Loaded YML file successfully.\n")
 }, error = function(e) {
-    stop("Error loading YML file: ", e$message)
+    stop(sprintf("Error loading YML file '%s': %s", path_yml, e$message), call. = FALSE)
 })
 
 ## Load samplesheet CSV file
 tryCatch({
-    samplesheet <- readr::read_csv(path_samplesheet, show_col_types = FALSE)
+    # Set the separator based on the file extension
+    sep <- if (str_detect(path_samplesheet, "\\.(csv|CSV)$")) {
+        ","
+    } else if (str_detect(path_samplesheet, "\\.(tsv|TSV)$")) {
+        "\t"
+    } else {
+        stop("Unsupported file extension. Please provide a .csv or .tsv file.")
+    }
+
+    # Read the file using the determined separator
+    samplesheet <- read_delim(path_samplesheet, delim = sep, show_col_types = FALSE)
     if ( !sample_column %in% colnames(samplesheet) ) {
         stop(paste0("The sample identificator column '", sample_column, "' is not present in the samplesheet file") )
     }

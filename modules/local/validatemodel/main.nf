@@ -8,8 +8,8 @@ process VALIDATE_MODEL {
         'community.wave.seqera.io/library/r-jsonlite_r-optparse_r-tidyverse_r-yaml:18dc3fc2d990206d' }"
 
     input:
-    path samplesheet
-    tuple val(meta), path(models_yml)
+    tuple val(meta) , path(samplesheet)
+    tuple val(meta2), path(models_yml)
 
     output:
     tuple val(meta), path("pheno_table.csv"), emit: pheno_table

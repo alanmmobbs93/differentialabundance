@@ -150,11 +150,15 @@ workflow DIFFERENTIALABUNDANCE {
     ch_contrasts_file = Channel.from([[exp_meta, file(params.contrasts)]])
 
 
-    // Run module to validate models
-    VALIDATE_MODEL(
-        ch_input,
-        ch_contrasts_file
-    )
+    // Run module to validate models from yml file
+    if ( params.contrasts.endsWith(".yaml") || params.contrasts.endsWith(".yml") ) {
+
+        VALIDATE_MODEL (
+            ch_input,
+            ch_contrasts_file
+        )
+
+    }
 
     // If we have affy array data in the form of CEL files we'll be deriving
     // matrix and annotation from them
