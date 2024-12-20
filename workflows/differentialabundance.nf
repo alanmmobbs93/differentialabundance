@@ -98,7 +98,7 @@ citations_file = file(params.citations_file, checkIfExists: true)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { TABULAR_TO_GSEA_CHIP           } from '../modules/local/tabulartogseachip'
+include { CUSTOM_TABULARTOGSEACHIP       } from '../modules/nf-core/custom/tabulartogseachip/main'
 include { CUSTOM_FILTERDIFFERENTIALTABLE } from '../modules/nf-core/custom/filterdifferentialtable/main'
 
 /*
@@ -476,8 +476,8 @@ workflow DIFFERENTIALABUNDANCE {
 
         CUSTOM_TABULARTOGSEACLS(ch_contrasts_and_samples)
 
-        TABULAR_TO_GSEA_CHIP(
-            VALIDATOR.out.feature_meta.map{ it[1] },
+        CUSTOM_TABULARTOGSEACHIP(
+            VALIDATOR.out.feature_meta,
             [params.features_id_col, params.features_name_col]
         )
 
@@ -494,7 +494,7 @@ workflow DIFFERENTIALABUNDANCE {
         GSEA_GSEA(
             ch_gsea_inputs,
             ch_gsea_inputs.map{ tuple(it[0].reference, it[0].target) }, // *
-            TABULAR_TO_GSEA_CHIP.out.chip.first()
+            CUSTOM_TABULARTOGSEACHIP.out.chip.first().map{ it[1] }
         )
 
         // * Note: GSEA module currently uses a value channel for the mandatory
@@ -507,7 +507,7 @@ workflow DIFFERENTIALABUNDANCE {
 
         // Record GSEA versions
         ch_versions = ch_versions
-            .mix(TABULAR_TO_GSEA_CHIP.out.versions)
+            .mix(CUSTOM_TABULARTOGSEACHIP.out.versions)
             .mix(GSEA_GSEA.out.versions)
     }
 

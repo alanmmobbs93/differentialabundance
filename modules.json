@@ -25,6 +25,11 @@
                         "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
                         "installed_by": ["modules"]
                     },
+                    "custom/tabulartogseachip": {
+                        "branch": "master",
+                        "git_sha": "7900e49fb84969a2479ecfbeef7bcbe296513c90",
+                        "installed_by": ["modules"]
+                    },
                     "custom/tabulartogseacls": {
                         "branch": "master",
                         "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
