@@ -115,7 +115,8 @@ include { UNTAR                                             } from '../modules/n
 include { SHINYNGS_APP                                      } from '../modules/nf-core/shinyngs/app/main'
 include { SHINYNGS_STATICEXPLORATORY as PLOT_EXPLORATORY    } from '../modules/nf-core/shinyngs/staticexploratory/main'
 include { SHINYNGS_STATICDIFFERENTIAL as PLOT_DIFFERENTIAL  } from '../modules/nf-core/shinyngs/staticdifferential/main'
-include { SHINYNGS_VALIDATEFOMCOMPONENTS as VALIDATOR       } from '../modules/nf-core/shinyngs/validatefomcomponents/main'
+// include { SHINYNGS_VALIDATEFOMCOMPONENTS as VALIDATOR       } from '../modules/nf-core/shinyngs/validatefomcomponents/main' //TODO using local version until https://github.com/nf-core/differentialabundance/issues/362 is closed
+include { SHINYNGS_VALIDATEFOMCOMPONENTS as VALIDATOR       } from '../modules/local/shinyngs/validatefomcomponents/main' //TODO remove this line once https://github.com/nf-core/differentialabundance/issues/362 is closed
 include { DESEQ2_DIFFERENTIAL as DESEQ2_NORM                } from '../modules/nf-core/deseq2/differential/main'
 include { DESEQ2_DIFFERENTIAL                               } from '../modules/nf-core/deseq2/differential/main'
 include { LIMMA_DIFFERENTIAL                                } from '../modules/nf-core/limma/differential/main'
@@ -186,13 +187,32 @@ workflow DIFFERENTIALABUNDANCE {
         // We'll be running Proteus once per unique contrast variable to generate plots
         // TODO: there should probably be a separate plotting module in proteus to simplify this
 
-        ch_contrast_variables = ch_contrasts_file
-            .splitCsv(header:true, sep:(params.contrasts.endsWith('csv') ? ',' : '\t'))
-            .map{ it.tail().first() }
-            .map{
-                tuple('id': it.variable)
-            }
-            .unique()   // uniquify to keep each contrast variable only once (in case it exists in multiple lines for blocking etc.)
+        // SUPPORT BOTH YAML AND CSV CONTRASTS FILE
+        if (params.contrasts.endsWith(".yaml") || params.contrasts.endsWith(".yml")) {
+            ch_contrast_variables = ch_contrasts_file
+                .map { entry ->
+                    def yaml_file = entry[1]
+                    def yaml_data = new groovy.yaml.YamlSlurper().parse(yaml_file)
+
+                    yaml_data.contrasts.collect { contrast ->
+                        tuple('id': contrast.comparison[0])
+                    }
+                }
+                .flatten()
+                .unique() // Uniquify to keep each contrast variable only once (in case it exists in multiple lines for blocking etc.)
+        } else if (params.contrasts.endsWith(".csv")) {
+            //csv contrasts file processing
+            ch_contrast_variables = ch_contrasts_file
+                .splitCsv(header:true, sep:(params.contrasts.endsWith('csv') ? ',' : '\t'))
+                .map{ it.tail().first() }
+                .map{
+                    tuple('id': it.variable)
+                }
+                .unique()
+        }
+
+        ch_contrast_variables.dump(tag:"ch_contrasts_variables")
+
 
         // Run proteus to import protein abundances
         PROTEUS(
