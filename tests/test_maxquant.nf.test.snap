@@ -196,6 +196,13 @@
                     "r-plotly": "4.10.2",
                     "bioconductor-limma": "3.54.0"
                 },
+                "VALIDATE_MODEL": {
+                    "r-base": "4.4.2",
+                    "tidyverse": "2.0.0",
+                    "optparse": "1.7.5",
+                    "yaml": "2.3.10",
+                    "jsonlite": "1.8.9"
+                },
                 "VALIDATOR": {
                     "r-base": "4.3.3",
                     "r-shinyngs": "2.0.0"
@@ -356,6 +363,6 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2024-12-20T20:09:08.805617631"
+        "timestamp": "2024-12-21T15:58:50.7683424"
     }
 }
