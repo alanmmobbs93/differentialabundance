@@ -158,6 +158,8 @@ workflow DIFFERENTIALABUNDANCE {
             ch_contrasts_file
         )
 
+        ch_versions = ch_versions
+            .mix(VALIDATE_MODEL.out.versions)
     }
 
     // If we have affy array data in the form of CEL files we'll be deriving

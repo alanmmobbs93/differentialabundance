@@ -42,9 +42,9 @@ if (is.null(opt$yml) || is.null(opt$samplesheet) ) {
 }
 
 ### Collect parameters (easier for dev and testing)
-path_yml         <- opt$yml             # "/workspace/differentialabundance/modules/local/validatemodel/tests/contrasts.yml" #
-path_samplesheet <- opt$samplesheet     # "/workspace/differentialabundance/results/SRP254919.samplesheet.csv" #
-sample_column    <- opt$sample_id_col   # "sample" #
+path_yml         <- opt$yml
+path_samplesheet <- opt$samplesheet
+sample_column    <- opt$sample_id_col
 
 # LOAD FILES --------------------------------------------------------
 ## Load models.yml file
@@ -208,11 +208,11 @@ validate_model <- function(sample_column, variables, samplesheet) { # sample_col
     continuous <- c()
 
     ## Do not allow special characters
-    undesired_chars <- "[^a-zA-Z0-9_.]"
+    undesired_chars <- regex("[^a-zA-Z0-9_.]")
 
     ## Check samplesheet names for invalid colnames
     df_colnames <- names(samplesheet)
-    true_columns <- stringr::str_detect(df_colnames, pattern = regex(undesired_chars))
+    true_columns <- stringr::str_detect(df_colnames, pattern = undesired_chars)
 
     if ( sum(true_columns) > 0 ) {
         errors <- c(errors,
@@ -268,7 +268,7 @@ validate_model <- function(sample_column, variables, samplesheet) { # sample_col
             }
 
             ## Check that the column data does not contain undesired characters
-            if ( sum( stringr::str_detect( samplesheet[[ VARIABLE ]], pattern = regex(undesired_chars) ), na.rm = TRUE) > 0 ) {
+            if ( sum( stringr::str_detect( samplesheet[[ VARIABLE ]], pattern = undesired_chars ), na.rm = TRUE) > 0 ) {
                 errors <- c(errors,
                     paste0("Column ", VARIABLE, " contains undesired characters\n")
                 )
@@ -350,8 +350,6 @@ pheno_table <- phenotable_warnings[[1]]
 ## FUNCTION TO CHECK THAT THE MODELS ARE FULL RANKED
 check_model_contrasts <- function(contrasts_list, colData) {
 
-    #contrasts_list <- contrasts_list
-    #colData        <- pheno_table
     #######################################################
     ##
     ## Function that takes a list with models + variables, and a phenotypic table
@@ -372,7 +370,6 @@ check_model_contrasts <- function(contrasts_list, colData) {
     design_list <- list()
     ### Iterate over each model
     for (model_name in names(contrasts_list)) {
-        #model_name <- names(contrasts_list[2])
 
         ## Extract model components
         model        <- contrasts_list[[model_name]]

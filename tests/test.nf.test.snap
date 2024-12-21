@@ -215,6 +215,13 @@
                 "PLOT_EXPLORATORY": {
                     "r-shinyngs": "2.0.0"
                 },
+                "VALIDATE_MODEL": {
+                    "r-base": "4.4.2",
+                    "tidyverse": "2.0.0",
+                    "optparse": "1.7.5",
+                    "yaml": "2.3.10",
+                    "jsonlite": "1.8.9"
+                },
                 "VALIDATOR": {
                     "r-base": "4.3.3",
                     "r-shinyngs": "2.0.0"
@@ -382,6 +389,6 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2024-12-20T19:25:36.541448998"
+        "timestamp": "2024-12-21T15:26:26.473702144"
     }
 }
