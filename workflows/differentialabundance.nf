@@ -134,6 +134,7 @@ include { GEOQUERY_GETGEO                                   } from '../modules/n
 include { ZIP as MAKE_REPORT_BUNDLE                         } from '../modules/nf-core/zip/main'
 include { softwareVersionsToYAML                            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { VALIDATE_MODEL                                    } from '../modules/local/validatemodel/main'
+include { DREAM_DIFFERENTIAL                                } from '../modules/local/dream/differential/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -401,6 +402,25 @@ workflow DIFFERENTIALABUNDANCE {
             .first()
 
     } else {
+
+        // TODO: MOVE THE MODULE TO THE CORRECT SPOT LATER!
+        if ( params.contrasts.endsWith(".yaml") || params.contrasts.endsWith(".yml") ) {
+
+            ch_contrasts_file
+                .flatMap{ meta, yml ->
+                    YMLProcessing.parseContrastsFromYML(yml)
+                }
+                .tap{ ch_contrast_dream }
+                .view{ "== CONTRASTS YML CHANNEL == ${it} "}
+
+            DREAM_DIFFERENTIAL (
+                ch_contrast_dream,
+                ch_samples_and_matrix
+            )
+        }
+        // END OF NEW BLOCK
+
+
         DESEQ2_NORM (
             ch_contrasts.first(),
             ch_samples_and_matrix,
