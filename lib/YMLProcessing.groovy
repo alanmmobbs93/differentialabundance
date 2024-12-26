@@ -22,17 +22,17 @@ class YMLProcessing {
             throw new IllegalArgumentException("Invalid YAML structure: Missing 'contrasts' key.")
         }
 
-        def tuples = yamlData.contrasts.collect { contrast ->
-            if (!contrast?.id || !contrast?.comparison || contrast.comparison.size() < 3) {
-                throw new IllegalArgumentException("Invalid contrast data: ${contrast}")
+        def tuples = yamlData.contrasts.collect { contrasts ->
+            if (!contrasts?.id || !contrasts?.comparison || contrasts.comparison.size() < 3) {
+                throw new IllegalArgumentException("Invalid contrast data: ${contrasts}")
             }
 
             [
-                id: contrast.id,
-                contrast_variable: contrast.comparison[0],
-                reference: contrast.comparison[1],
-                target: contrast.comparison[2],
-                blocking_factors: blocking_factors
+                id: contrasts.id,
+                contrast_variable: contrasts.comparison[0],
+                reference: contrasts.comparison[1],
+                target: contrasts.comparison[2],
+                blocking_factors: contrasts.blocking_factors ?: null // Handle missing blocking_factors
             ]
         }
 

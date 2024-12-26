@@ -8,18 +8,18 @@ process DREAM_DIFFERENTIAL {
 
     conda "${moduleDir}/environment.yml" // TODO: COMPLETE THIS TOO!
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/20/201c970c051ff973190938c6fb75ce99530346115e8a7600b9423be00daf3fdf/data' :
-        'community.wave.seqera.io/library/bioconductor-edger_bioconductor-variancepartition:69f4dda505cec1f3' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/d6/d6fa8a7908dd357484d63bb574a378f1739440a2c0752ce91b1e0e9d1ac1638c/data' :
+        'community.wave.seqera.io/library/bioconductor-edger_bioconductor-variancepartition_r-optparse:ba778938d72f30c5' }"
 
     input:
     val meta // array with id, [...]
     tuple val(meta2), path(samplesheet), path(intensities)
 
     output: // TODO: COMPLETE OUTPUTS!
-    tuple val(meta), path("*.limma.results.tsv")          , emit: results
-    tuple val(meta), path("*.limma.mean_difference.png")  , emit: md_plot
-    tuple val(meta), path("*.MArrayLM.limma.rds")         , emit: rdata
-    tuple val(meta), path("*.limma.model.txt")            , emit: model
+    tuple val(meta), path("*.dream.results.tsv")          , emit: results
+    tuple val(meta), path("*.dream.mean_difference.png")  , emit: md_plot
+    tuple val(meta), path("*.MArrayMM.dream.rds")         , emit: rdata
+    tuple val(meta), path("*.dream.model.txt")            , emit: model
     tuple val(meta), path("*.R_sessionInfo.log")          , emit: session_info
     tuple val(meta), path("*.normalised_counts.tsv")      , emit: normalised_counts, optional: true
     path "versions.yml"                                   , emit: versions
@@ -29,12 +29,12 @@ process DREAM_DIFFERENTIAL {
 
     script:
     def prefix                 = task.ext.prefix ?: meta.id
-    def blocking_factors       = meta.blocking_factors ? "--blocking_variables ${meta.blocking_factors}" : ''
-    def exclude_samples_col    = meta.exclude_samples_col ? "--exclude_samples_col ${meta.exclude_samples_col}" : ''
-    def exclude_samples_values = meta.exclude_samples_values ? "--exclude_samples_values ${meta.exclude_samples_values}" : ''
+    def blocking_factors       = meta.blocking_factors ? "--blocking_variables '${meta.blocking_factors.join(';')}'" : ''
+    def exclude_samples_col    = meta.exclude_samples_col ? "--exclude_samples_col '${meta.exclude_samples_col.join(';')}'" : ''
+    def exclude_samples_values = meta.exclude_samples_values ? "--exclude_samples_values '${meta.exclude_samples_values.join(';')}'" : ''
 
     """
-    ## TODO: CHECK WHERE DO exclude_samples_col exclude_samples_values and number OPTIONS COME FROM!!
+    ## TODO: CHECK WHERE DO `exclude_samples_col` `exclude_samples_values` and `number` OPTIONS COME FROM!!
     dream_de.R  \\
         --output_prefix ${prefix} \\
         --count_file ${intensities} \\
@@ -60,19 +60,19 @@ process DREAM_DIFFERENTIAL {
 
 
     stub: // TODO: COMPLETE STUB!
-    prefix              = task.ext.prefix   ?: "${meta.id}"
+    prefix = task.ext.prefix   ?: "${meta.id}"
     """
     #!/usr/bin/env Rscript
     library(limma)
-    a <- file("${prefix}.limma.results.tsv", "w")
+    a <- file("${prefix}.dream.results.tsv", "w")
     close(a)
-    a <- file("${prefix}.limma.mean_difference.png", "w")
+    a <- file("${prefix}.dream.mean_difference.png", "w")
     close(a)
-    a <- file("${prefix}.MArrayLM.limma.rds", "w")
+    a <- file("${prefix}.MArrayLM.dream.rds", "w")
     close(a)
     a <- file("${prefix}.normalised_counts.tsv", "w")
     close(a)
-    a <- file("${prefix}.limma.model.txt", "w")
+    a <- file("${prefix}.dream.model.txt", "w")
     close(a)
     a <- file("${prefix}.R_sessionInfo.log", "w")
     close(a)

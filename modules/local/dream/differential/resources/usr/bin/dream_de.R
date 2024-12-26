@@ -16,23 +16,30 @@
 
 read_delim_flexible <- function(file, header = TRUE, row.names = NULL, check.names = TRUE){
 
-    ext <- tolower(tail(strsplit(basename(file), split = "\\\\.")[[1]], 1))
+    ## Get file extension
+    ext <- tools::file_ext(basename(file))
 
+    ## Define separator
     if (ext == "tsv" || ext == "txt") {
-        separator <- "\\t"
+        separator <- '\t'
     } else if (ext == "csv") {
-        separator <- ","
+        separator <- ','
     } else {
         stop(paste("Unknown separator for", ext))
     }
 
-    read.delim(
+    ## Read file
+    cat("Reading file", basename(file), "with", ext, "separator\n")
+
+    df <- read.delim(
         file,
         sep = separator,
         header = header,
         row.names = row.names,
         check.names = check.names
     )
+
+    return(df)
 }
 
 ################################################
@@ -131,6 +138,7 @@ for (file_input in c("count_file", "sample_file")) {
 vector_opt <- c("stdev_coef_lim", "winsor_tail_p")
 opt[vector_opt] <- lapply(strsplit(unlist(opt[vector_opt]), ","), as.numeric)
 
+# Save first version of RData, useful for debuging with all original parameters already set
 save.image("dream_de.RData")
 
 ################################################
@@ -141,7 +149,9 @@ save.image("dream_de.RData")
 
 library(edgeR)
 library(variancePartition)
-library(BiocParallel)
+
+#setwd("/workspace/differentialabundance/results/work/35/2c9774396e3b167b172bf559389263")
+#load("dream_de.RData")
 
 ################################################
 ################################################
@@ -149,13 +159,7 @@ library(BiocParallel)
 ################################################
 ################################################
 
-intensities.table <-
-    read_delim_flexible(
-        file = opt$count_file,
-        header = TRUE,
-        row.names = opt$probe_id_col,
-        check.names = FALSE
-    )
+intensities.table <- read_delim_flexible(file = opt$count_file)
 sample.sheet <- read_delim_flexible(file = opt$sample_file)
 
 # Deal with spaces that may be in sample column
@@ -184,7 +188,7 @@ if (length(missing_samples) > 0) {
         'specified samples missing from count table:',
         paste(missing_samples, collapse = ',')
     ))
-} else{
+} else {
     # Save any non-count data, will gene metadata etc we might need later
     nonintensities.table <-
         intensities.table[, !colnames(intensities.table) %in% rownames(sample.sheet), drop = FALSE]
@@ -203,17 +207,17 @@ blocking.vars <- c()
 if (!contrast_variable %in% colnames(sample.sheet)) {
     stop(
         paste0(
-        'Chosen contrast variable \"',
+        'Chosen contrast variable "',
         contrast_variable,
-        '\" not in sample sheet'
+        '" not in sample sheet'
         )
     )
 } else if (any(!c(opt$reference_level, opt$target_level) %in% sample.sheet[[contrast_variable]])) {
     stop(
-        paste(
-        'Please choose reference and target levels that are present in the',
+        paste0(
+        'Please choose reference and target levels that are present in the ',
         contrast_variable,
-        'column of the sample sheet'
+        ' column of the sample sheet'
         )
     )
 } else if (!is.null(opt$blocking_variables)) {
@@ -297,7 +301,7 @@ for (v in vars_to_factor) {
 
 ################################################
 ################################################
-## Run Limma processes                        ##
+## Run Dream processes                        ##
 ################################################
 ################################################
 
@@ -308,21 +312,20 @@ design <- model.matrix(
 )
 
 # Adjust column names for the contrast variable
-colnames(design) <- sub(
-    paste0('^', contrast_variable),
-    paste0(contrast_variable, '.'),
-    colnames(design)
-)
+#colnames(design) <- sub(
+#    paste0('^', contrast_variable),
+#    paste0(contrast_variable, '.'),
+#    colnames(design)
+#)
 
 # Adjust column names to be syntactically valid
-colnames(design) <- make.names(colnames(design))
+#colnames(design) <- make.names(colnames(design))
 
 ## TODO: START ADAPTING TO DREAM IN HERE!
-## NEW
+## NEW STARTS HERE!
 
-# Specify parallel processing parameters
-## TODO: MAKE THIS A VARIABLE!
-param <- SnowParam(4, "SOCK", progressbar = TRUE)
+# Specify parallel processing
+param <- SnowParam(as.numeric(opt$threads), "SOCK", progressbar = TRUE)
 
 ## Set formula
 #form <- ~ Disease + (1 | Individual)
@@ -331,162 +334,100 @@ form <- as.formula(model)
 # Create a DGEList object for RNA-seq data
 dge <- DGEList(counts = intensities.table)
 
-# Normalize counts using TMM
+## Calculate normalization factors
 dge <- calcNormFactors(dge)
 
-vobjDream <- voomWithDreamWeights(dge, form, sample.sheet, BPPARAM = param)
+# estimate weights using linear mixed model of dream
+#vobjDream <- voomWithDreamWeights(dge, form, sample.sheet, BPPARAM = param)
 
 # Fit the dream model on each gene
 # For the hypothesis testing, by default,
 # dream() uses the KR method for <= 20 samples,
 # otherwise it uses the Satterthwaite approximation
-fitmm <- dream(vobjDream, form, sample.sheet)
-fitmm <- variancePartition::eBayes(fitmm)
 
-# Examine design matrix
-head(fitmm$design, 3)
+    ## TODO: this is the placeholder for `L = makeContrastsDream(...)` function, whose object should be included with `L` argument in dream() function
+    L <- variancePartition::makeContrastsDream(form, sample.sheet,
+        contrasts = c(
+            setNames(paste(
+                paste0(opt$contrast_variable, opt$target_level),
+                paste0(opt$contrast_variable, opt$reference_level),
+                sep = " - "), opt$output_prefix)
+            )
+        )
+
+    # Visualize contrast matrix
+    plotContrasts(L)
+
+    # fit dream model with contrasts
+    fitmm <- dream(vobjDream, form, sample.sheet, L)
+    fitmm <- variancePartition::eBayes(fitmm)
+
+    # get names of available coefficients and contrasts for testing
+    colnames(fitmm)
+
+    #        c(
+    #    compare2_1 = "DiseaseSubtype2 - DiseaseSubtype1",
+    #    compare1_0 = "DiseaseSubtype1 - DiseaseSubtype0"
+    #)
+
+    ## TODO: add `plotContrasts(L)` to export a graphical view of contrasts
+    ## TODO: examine probable arguments that can be customized with nextflow params
+
+    #fitmm <- dream(vobjDream, form, sample.sheet)
+    #fitmm <- variancePartition::eBayes(fitmm)
+
+# Get results of hypothesis test on coefficients of interest
+for (COEFFICIENT in opt$output_prefix) { #colnames(fitmm)) {
+
+    ## Initialize topTable() arguments
+    toptable_args <- list(
+        fit = fitmm,
+        coef = COEFFICIENT,
+        sort.by = 'none',
+        number = nrow(intensities.table)
+    )
+
+    ## Complete list with extra arguments if they were provided
+    if (! is.null(opt$adjust.method)){
+        toptable_args[['adjust.method']] <- opt$adjust.method
+    }
+    if (! is.null(opt$p.value)){
+        toptable_args[['p.value']] <- as.numeric(opt$p.value)
+    }
+    if (! is.null(opt$lfc)){
+        toptable_args[['lfc']] <- as.numeric(opt$lfc)
+    }
+    if (! is.null(opt$confint)){
+        toptable_args[['confint']] <- as.logical(opt$confint)
+    }
+
+    ## generate topTable
+    comp.results <- do.call(topTable, toptable_args)[rownames(intensities.table),]
+
+    ## Create contrast name (adapted from limma, here it will be coefficient)
+    contrast.name <- make.names(COEFFICIENT)
+            #paste(opt$target_level, opt$reference_level, sep = "_vs_")
+    cat("Saving results for ", contrast.name, " ...\n", sep = "")
+
+    ## Differential expression table - note very limited rounding for consistency of results
+
+    out_df <- cbind(
+        setNames(data.frame(rownames(comp.results)), opt$probe_id_col),
+        data.frame(comp.results[, !(colnames(comp.results) %in% opt$probe_id_col)], check.names = FALSE)
+    )
+
+    write.table(
+        out_df,
+        file = paste(opt$output_prefix, contrast.name, 'dream.results.tsv', sep = '.'),
+        col.names = TRUE,
+        row.names = FALSE,
+        sep = '\t',
+        quote = FALSE
+    )
+
+}
 
 ## END OF NEW
-# Perform voom normalisation for RNA-seq data
-#if (!is.null(opt$use_voom) && opt$use_voom) {
-#    # Create a DGEList object for RNA-seq data
-#    dge <- DGEList(counts = intensities.table)
-#
-#    # Normalize counts using TMM
-#    dge <- calcNormFactors(dge, method = "TMM")
-#
-#    # Run voom to transform the data
-#    data_for_fit <- voom(dge, design)
-#} else {
-#    # Use as.matrix for regular microarray analysis
-#    data_for_fit <- as.matrix(intensities.table)
-#}
-
-#if (!is.null(opt$block)) {
-#    corfit = duplicateCorrelation(data_for_fit, design = design, block = sample.sheet[[opt$block]])
-#    if (!is.null(opt$use_voom) && opt$use_voom) {
-#        data_for_fit <- voom(counts = dge, design = design, plot = FALSE, correlation = corfit$consensus.correlation)
-#    }
-#}
-
-# For Voom, write the normalized counts matrix to a TSV file
-if (!is.null(opt$use_voom) && opt$use_voom) {
-    normalized_counts <- data_for_fit$E
-    normalized_counts_with_genes <- data.frame(Gene = rownames(normalized_counts), normalized_counts, row.names = NULL)
-    colnames(normalized_counts_with_genes)[1] <- opt$probe_id_col
-    write.table(normalized_counts_with_genes,
-        file = paste(opt$output_prefix, "normalised_counts.tsv", sep = '.'),
-        sep = "\t",
-        quote = FALSE,
-        row.names = FALSE)
-}
-
-# Prepare for and run lmFit()
-
-lmfit_args <- list(
-    object = data_for_fit,
-    design = design
-)
-
-# Include optional parameters if provided
-if (! is.null(opt$ndups)){
-    lmfit_args[['ndups']] <- as.numeric(opt$ndups)
-}
-if (! is.null(opt$spacing)){
-    lmfit_args[['spacing']] <- as.numeric(opt$spacing)
-}
-if (! is.null(opt$block)){
-    lmfit_args[['block']] <- sample.sheet[[opt$block]]
-}
-if (! is.null(opt$correlation)){
-    lmfit_args[['correlation']] <- as.numeric(opt$correlation)
-} else if (! is.null(opt$block)){
-    lmfit_args[['correlation']] <- corfit$consensus.correlation
-}
-if (! is.null(opt$method)){
-    lmfit_args[['method']] <- opt$method
-}
-
-fit <- do.call(lmFit, lmfit_args)
-
-# Contrasts bit
-
-# Create the contrast string for the specified comparison
-
-# Construct the expected column names for the target and reference levels in the design matrix
-treatment_target <- paste0(contrast_variable, ".", opt$target_level)
-treatment_reference <- paste0(contrast_variable, ".", opt$reference_level)
-
-# Determine how to construct the contrast string based on which levels are present in the design matrix
-if ((treatment_target %in% colnames(design)) && (treatment_reference %in% colnames(design))) {
-    # Both target and reference levels are present in the design matrix
-    # We can directly compare the two levels
-    contrast_string <- paste0(treatment_target, "-", treatment_reference)
-} else if (treatment_target %in% colnames(design)) {
-    # Only the target level is present in the design matrix
-    # The reference level may have been omitted due to collinearity or being set as the baseline
-    # We compare the target level to zero (implicit reference)
-    contrast_string <- paste0(treatment_target, "- 0")
-} else if (treatment_reference %in% colnames(design)) {
-    # Only the reference level is present in the design matrix
-    # The target level may have been omitted from the design matrix
-    # We compare zero (implicit target) to the reference level
-    contrast_string <- paste0("0 - ", treatment_reference)
-} else {
-    # Neither level is present in the design matrix
-    # This indicates an error; the specified levels are not found
-    stop(paste0(treatment_target, " and ", treatment_reference, " not found in design matrix"))
-}
-
-# Create the contrast matrix
-contrast.matrix <- makeContrasts(contrasts=contrast_string, levels=design)
-fit2 <- contrasts.fit(fit, contrast.matrix)
-
-# Prepare for and run eBayes
-
-ebayes_args <- list(
-    fit = fit2
-)
-
-if (! is.null(opt$proportion)){
-    ebayes_args[['proportion']] <- as.numeric(opt$proportion)
-}
-if (! is.null(opt$stdev.coef.lim)){
-    ebayes_args[['stdev.coef.lim']] <- as.numeric(opt$stdev.coef.lim)
-}
-if (! is.null(opt$trend)){
-    ebayes_args[['trend']] <- as.logical(opt$trend)
-}
-if (! is.null(opt$robust)){
-    ebayes_args[['robust']] <- as.logical(opt$robust)
-}
-if (! is.null(opt$winsor.tail.p)){
-    ebayes_args[['winsor.tail.p']] <- as.numeric(opt$winsor.tail.p)
-}
-
-fit2 <- do.call(eBayes, ebayes_args)
-
-# Run topTable() to generate a results data frame
-toptable_args <- list(
-    fit = fit2,
-    sort.by = 'none',
-    number = nrow(intensities.table)
-)
-
-if (! is.null(opt$adjust.method)){
-    toptable_args[['adjust.method']] <- opt$adjust.method
-}
-if (! is.null(opt$p.value)){
-    toptable_args[['p.value']] <- as.numeric(opt$p.value)
-}
-if (! is.null(opt$lfc)){
-    toptable_args[['lfc']] <- as.numeric(opt$lfc)
-}
-if (! is.null(opt$confint)){
-    toptable_args[['confint']] <- as.logical(opt$confint)
-}
-
-comp.results <- do.call(topTable, toptable_args)[rownames(intensities.table),]
 
 ################################################
 ################################################
@@ -494,43 +435,41 @@ comp.results <- do.call(topTable, toptable_args)[rownames(intensities.table),]
 ################################################
 ################################################
 
-contrast.name <-
-    paste(opt$target_level, opt$reference_level, sep = "_vs_")
-cat("Saving results for ", contrast.name, " ...\n", sep = "")
+#contrast.name <-
+#    paste(opt$target_level, opt$reference_level, sep = "_vs_")
+#cat("Saving results for ", contrast.name, " ...\n", sep = "")
 
 # Differential expression table - note very limited rounding for consistency of
 # results
 
-out_df <- cbind(
-    setNames(data.frame(rownames(comp.results)), opt$probe_id_col),
-    data.frame(comp.results[, !(colnames(comp.results) %in% opt$probe_id_col)], check.names = FALSE)
-)
-write.table(
-    out_df,
-    file = paste(opt$output_prefix, 'limma.results.tsv', sep = '.'),
-    col.names = TRUE,
-    row.names = FALSE,
-    sep = '\t',
-    quote = FALSE
-)
+#out_df <- cbind(
+#    setNames(data.frame(rownames(comp.results)), opt$probe_id_col),
+#    data.frame(comp.results[, !(colnames(comp.results) %in% opt$probe_id_col)], check.names = FALSE)
+#)
+#write.table(
+#    out_df,
+#    file = paste(opt$output_prefix, 'dream.results.tsv', sep = '.'),
+#    col.names = TRUE,
+#    row.names = FALSE,
+#    sep = '\t',
+#    quote = FALSE
+#)
 
 # Dispersion plot
 
 png(
-    file = paste(opt$output_prefix, 'limma.mean_difference.png', sep = '.'),
+    file = paste(opt$output_prefix, 'dream.mean_difference.png', sep = '.'),
     width = 600,
     height = 600
 )
-plotMD(fit2)
+plotMD(fitmm)
 dev.off()
 
 # R object for other processes to use
-
-saveRDS(fit2, file = paste(opt$output_prefix, 'MArrayLM.limma.rds', sep = '.'))
+saveRDS(fitmm, file = paste(opt$output_prefix, 'MArrayMM.dream.rds', sep = '.'))
 
 # Save model to file
-
-write(model, file=paste(opt$output_prefix, 'limma.model.txt', sep = '.'))
+write(model, file=paste(opt$output_prefix, 'dream.model.txt', sep = '.'))
 
 ################################################
 ################################################
@@ -541,23 +480,6 @@ write(model, file=paste(opt$output_prefix, 'limma.model.txt', sep = '.'))
 sink(paste(opt$output_prefix, "R_sessionInfo.log", sep = '.'))
 print(sessionInfo())
 sink()
-
-################################################
-################################################
-## VERSIONS FILE                              ##
-################################################
-################################################
-
-r.version <- strsplit(version[['version.string']], ' ')[[1]][3]
-limma.version <- as.character(packageVersion('limma'))
-
-writeLines(
-    c(
-        '"${task.process}":',
-        paste('    r-base:', r.version),
-        paste('    bioconductor-limma:', limma.version)
-    ),
-'versions.yml')
 
 ################################################
 ################################################
