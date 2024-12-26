@@ -338,7 +338,7 @@ dge <- DGEList(counts = intensities.table)
 dge <- calcNormFactors(dge)
 
 # estimate weights using linear mixed model of dream
-#vobjDream <- voomWithDreamWeights(dge, form, sample.sheet, BPPARAM = param)
+vobjDream <- voomWithDreamWeights(dge, form, sample.sheet, BPPARAM = param)
 
 # Fit the dream model on each gene
 # For the hypothesis testing, by default,
