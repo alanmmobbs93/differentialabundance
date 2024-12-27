@@ -65,8 +65,6 @@ option_list <- list(
         help = "Target level for the contrast [default:  %default]"),
     make_option(c("--blocking_variables"), type = "character", default = NULL,
         help = "Blocking variables for the analysis [default: %default]"),
-    make_option(c("--probe_id_col"), type = "character", default = "probe_id",
-        help = "Column name for probe IDs [default: %default]"),
     make_option(c("--sample_id_col"), type = "character", default = "experiment_accession",
         help = "Column name for sample IDs [default: %default]"),
     make_option(c("--subset_to_contrast_samples"), type = "logical", default = FALSE,
@@ -150,7 +148,8 @@ save.image("dream_de.RData")
 library(edgeR)
 library(variancePartition)
 
-#setwd("/workspace/differentialabundance/results/work/35/2c9774396e3b167b172bf559389263")
+## Load RData (for dev purposes)
+#setwd("/workspace/differentialabundance/results/work/fe/264e25e728b3300231e7d393e939f4")
 #load("dream_de.RData")
 
 ################################################
@@ -291,7 +290,7 @@ if (!is.null(opt$blocking_variables)) {
 model_vars <- c(model_vars, contrast_variable)
 
 # Construct the model formula
-model <- paste('~ 0 +', paste(model_vars, collapse = '+'))                          ## WHY FORCING THE INTERSECTION? NOT RECOMMENDED FOR COVARIATES (or continuous variables)
+model <- paste('~ 0 +', paste(model_vars, collapse = '+'))
 
 # Make sure all the appropriate variables are factors
 vars_to_factor <- model_vars  # All variables in the model need to be factors
@@ -310,16 +309,6 @@ design <- model.matrix(
     as.formula(model),
     data=sample.sheet
 )
-
-# Adjust column names for the contrast variable
-#colnames(design) <- sub(
-#    paste0('^', contrast_variable),
-#    paste0(contrast_variable, '.'),
-#    colnames(design)
-#)
-
-# Adjust column names to be syntactically valid
-#colnames(design) <- make.names(colnames(design))
 
 ## TODO: START ADAPTING TO DREAM IN HERE!
 ## NEW STARTS HERE!
@@ -345,39 +334,36 @@ vobjDream <- voomWithDreamWeights(dge, form, sample.sheet, BPPARAM = param)
 # dream() uses the KR method for <= 20 samples,
 # otherwise it uses the Satterthwaite approximation
 
-    ## TODO: this is the placeholder for `L = makeContrastsDream(...)` function, whose object should be included with `L` argument in dream() function
-    L <- variancePartition::makeContrastsDream(form, sample.sheet,
-        contrasts = c(
-            setNames(paste(
-                paste0(opt$contrast_variable, opt$target_level),
-                paste0(opt$contrast_variable, opt$reference_level),
-                sep = " - "), opt$output_prefix)
-            )
+## TODO: this is the placeholder for `L = makeContrastsDream(...)` function, whose object should be included with `L` argument in dream() function
+L <- variancePartition::makeContrastsDream(form, sample.sheet,
+    contrasts = c(
+        setNames(paste(
+            paste0(opt$contrast_variable, opt$target_level),
+            paste0(opt$contrast_variable, opt$reference_level),
+            sep = " - "), opt$output_prefix)
         )
+    )
 
-    # Visualize contrast matrix
-    plotContrasts(L)
+# Visualize contrast matrix
+contrasts_plot <- plotContrasts(L)
 
-    # fit dream model with contrasts
-    fitmm <- dream(vobjDream, form, sample.sheet, L)
-    fitmm <- variancePartition::eBayes(fitmm)
+png(
+    file = paste(opt$output_prefix, 'dream.contrasts_plot.png', sep = '.'),
+    width = 600,
+    height = 300
+)
+plot(contrasts_plot)
+dev.off()
 
-    # get names of available coefficients and contrasts for testing
-    colnames(fitmm)
+# fit dream model with contrasts
+fitmm <- dream(vobjDream, form, sample.sheet, L)
+fitmm <- variancePartition::eBayes(fitmm)
 
-    #        c(
-    #    compare2_1 = "DiseaseSubtype2 - DiseaseSubtype1",
-    #    compare1_0 = "DiseaseSubtype1 - DiseaseSubtype0"
-    #)
-
-    ## TODO: add `plotContrasts(L)` to export a graphical view of contrasts
-    ## TODO: examine probable arguments that can be customized with nextflow params
-
-    #fitmm <- dream(vobjDream, form, sample.sheet)
-    #fitmm <- variancePartition::eBayes(fitmm)
+# get names of available coefficients and contrasts for testing
+colnames(fitmm)
 
 # Get results of hypothesis test on coefficients of interest
-for (COEFFICIENT in opt$output_prefix) { #colnames(fitmm)) {
+for (COEFFICIENT in opt$output_prefix) {
 
     ## Initialize topTable() arguments
     toptable_args <- list(
@@ -404,27 +390,15 @@ for (COEFFICIENT in opt$output_prefix) { #colnames(fitmm)) {
     ## generate topTable
     comp.results <- do.call(topTable, toptable_args)[rownames(intensities.table),]
 
-    ## Create contrast name (adapted from limma, here it will be coefficient)
-    contrast.name <- make.names(COEFFICIENT)
-            #paste(opt$target_level, opt$reference_level, sep = "_vs_")
-    cat("Saving results for ", contrast.name, " ...\n", sep = "")
-
-    ## Differential expression table - note very limited rounding for consistency of results
-
-    out_df <- cbind(
-        setNames(data.frame(rownames(comp.results)), opt$probe_id_col),
-        data.frame(comp.results[, !(colnames(comp.results) %in% opt$probe_id_col)], check.names = FALSE)
-    )
-
+    ## Export topTable
     write.table(
-        out_df,
-        file = paste(opt$output_prefix, contrast.name, 'dream.results.tsv', sep = '.'),
+        comp.results,
+        file = paste(opt$output_prefix, 'dream.results.tsv', sep = '.'),
         col.names = TRUE,
         row.names = FALSE,
         sep = '\t',
         quote = FALSE
     )
-
 }
 
 ## END OF NEW
@@ -434,26 +408,6 @@ for (COEFFICIENT in opt$output_prefix) { #colnames(fitmm)) {
 ## Generate outputs                           ##
 ################################################
 ################################################
-
-#contrast.name <-
-#    paste(opt$target_level, opt$reference_level, sep = "_vs_")
-#cat("Saving results for ", contrast.name, " ...\n", sep = "")
-
-# Differential expression table - note very limited rounding for consistency of
-# results
-
-#out_df <- cbind(
-#    setNames(data.frame(rownames(comp.results)), opt$probe_id_col),
-#    data.frame(comp.results[, !(colnames(comp.results) %in% opt$probe_id_col)], check.names = FALSE)
-#)
-#write.table(
-#    out_df,
-#    file = paste(opt$output_prefix, 'dream.results.tsv', sep = '.'),
-#    col.names = TRUE,
-#    row.names = FALSE,
-#    sep = '\t',
-#    quote = FALSE
-#)
 
 # Dispersion plot
 

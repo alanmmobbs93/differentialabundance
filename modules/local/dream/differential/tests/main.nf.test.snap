@@ -1,25 +1,336 @@
 {
-    "test_dream_differential": {
+    "Mus musculus - expression table - contrasts + blocking factors": {
         "content": [
-            [
-                [
-                    {
-                        "id": "diagnosis_normal_uremia",
-                        "variable": "diagnosis",
-                        "reference": "normal",
-                        "target": "uremia"
-                    },
-                    "diagnosis_normal_uremia.limma.model.txt:md5,70b000f632b8bdba4917046362dd876b"
+            {
+                "0": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.dream.results.tsv:md5,bd28cb586bb40ad9f0b7069cb3ada0a2"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.dream.mean_difference.png:md5,0d1c235cca14dcf75af4ef6cb66247ae"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.MArrayMM.dream.rds:md5,9197daf020341f1fc92636c762cb40e0"
+                    ]
+                ],
+                "3": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.dream.model.txt:md5,d2113d82b76046c319e6602da2ad74d6"
+                    ]
+                ],
+                "4": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.dream.contrasts_plot.png:md5,1fab14c3a7fb300bc6d8e693ef75cf27"
+                    ]
+                ],
+                "5": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.R_sessionInfo.log:md5,e591353ef3f5d63a74889d57f7ce37c6"
+                    ]
+                ],
+                "6": [
+                    
+                ],
+                "7": [
+                    "versions.yml:md5,f902a0bdfcdaef1ea0c0b3e0f38e8caa"
+                ],
+                "contrasts_png": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.dream.contrasts_plot.png:md5,1fab14c3a7fb300bc6d8e693ef75cf27"
+                    ]
+                ],
+                "md_plot": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.dream.mean_difference.png:md5,0d1c235cca14dcf75af4ef6cb66247ae"
+                    ]
+                ],
+                "model": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.dream.model.txt:md5,d2113d82b76046c319e6602da2ad74d6"
+                    ]
+                ],
+                "normalised_counts": [
+                    
+                ],
+                "rdata": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.MArrayMM.dream.rds:md5,9197daf020341f1fc92636c762cb40e0"
+                    ]
+                ],
+                "results": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.dream.results.tsv:md5,bd28cb586bb40ad9f0b7069cb3ada0a2"
+                    ]
+                ],
+                "session_info": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": "sample_number"
+                        },
+                        "treatment_mCherry_hND6.R_sessionInfo.log:md5,e591353ef3f5d63a74889d57f7ce37c6"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,f902a0bdfcdaef1ea0c0b3e0f38e8caa"
                 ]
-            ],
-            [
-                "versions.yml:md5,eed1551ca6ab292ccb2220f8650ba395"
-            ]
+            }
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2024-12-23T14:29:57.718057085"
+        "timestamp": "2024-12-27T13:45:33.995697552"
+    },
+    "Mus musculus - expression table - contrasts": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.dream.results.tsv:md5,bd28cb586bb40ad9f0b7069cb3ada0a2"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.dream.mean_difference.png:md5,0d1c235cca14dcf75af4ef6cb66247ae"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.MArrayMM.dream.rds:md5,9197daf020341f1fc92636c762cb40e0"
+                    ]
+                ],
+                "3": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.dream.model.txt:md5,d2113d82b76046c319e6602da2ad74d6"
+                    ]
+                ],
+                "4": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.dream.contrasts_plot.png:md5,1fab14c3a7fb300bc6d8e693ef75cf27"
+                    ]
+                ],
+                "5": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.R_sessionInfo.log:md5,e591353ef3f5d63a74889d57f7ce37c6"
+                    ]
+                ],
+                "6": [
+                    
+                ],
+                "7": [
+                    "versions.yml:md5,f902a0bdfcdaef1ea0c0b3e0f38e8caa"
+                ],
+                "contrasts_png": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.dream.contrasts_plot.png:md5,1fab14c3a7fb300bc6d8e693ef75cf27"
+                    ]
+                ],
+                "md_plot": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.dream.mean_difference.png:md5,0d1c235cca14dcf75af4ef6cb66247ae"
+                    ]
+                ],
+                "model": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.dream.model.txt:md5,d2113d82b76046c319e6602da2ad74d6"
+                    ]
+                ],
+                "normalised_counts": [
+                    
+                ],
+                "rdata": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.MArrayMM.dream.rds:md5,9197daf020341f1fc92636c762cb40e0"
+                    ]
+                ],
+                "results": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.dream.results.tsv:md5,bd28cb586bb40ad9f0b7069cb3ada0a2"
+                    ]
+                ],
+                "session_info": [
+                    [
+                        {
+                            "id": "treatment_mCherry_hND6",
+                            "contrast_variable": "treatment",
+                            "reference": "mCherry",
+                            "target": "hND6",
+                            "blocking_factors": null
+                        },
+                        "treatment_mCherry_hND6.R_sessionInfo.log:md5,e591353ef3f5d63a74889d57f7ce37c6"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,f902a0bdfcdaef1ea0c0b3e0f38e8caa"
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "24.10.3"
+        },
+        "timestamp": "2024-12-27T13:41:50.901788962"
     }
 }

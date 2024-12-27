@@ -20,6 +20,7 @@ process DREAM_DIFFERENTIAL {
     tuple val(meta), path("*.dream.mean_difference.png")  , emit: md_plot
     tuple val(meta), path("*.MArrayMM.dream.rds")         , emit: rdata
     tuple val(meta), path("*.dream.model.txt")            , emit: model
+    tuple val(meta), path('*.dream.contrasts_plot.png')   , emit: contrasts_png
     tuple val(meta), path("*.R_sessionInfo.log")          , emit: session_info
     tuple val(meta), path("*.normalised_counts.tsv")      , emit: normalised_counts, optional: true
     path "versions.yml"                                   , emit: versions
@@ -32,7 +33,7 @@ process DREAM_DIFFERENTIAL {
     def blocking_factors       = meta.blocking_factors ? "--blocking_variables '${meta.blocking_factors.join(';')}'" : ''
     def exclude_samples_col    = meta.exclude_samples_col ? "--exclude_samples_col '${meta.exclude_samples_col.join(';')}'" : ''
     def exclude_samples_values = meta.exclude_samples_values ? "--exclude_samples_values '${meta.exclude_samples_values.join(';')}'" : ''
-
+    println("Meta is: ${meta}")
     """
     ## TODO: CHECK WHERE DO `exclude_samples_col` `exclude_samples_values` and `number` OPTIONS COME FROM!!
     dream_de.R  \\
