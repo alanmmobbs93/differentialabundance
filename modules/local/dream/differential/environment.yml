@@ -3,4 +3,5 @@ channels:
   - bioconda
 dependencies:
   - bioconda::bioconductor-edger=4.0.16
-  - bioconda::bioconductor-limma=3.58.1
+  - bioconda::bioconductor-variancepartition=1.32.2
+  - conda-forge::r-optparse=1.7.5

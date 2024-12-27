@@ -418,7 +418,6 @@ workflow DIFFERENTIALABUNDANCE {
             )
 
             ch_versions = ch_versions.mix(DREAM_DIFFERENTIAL.out.versions)
-
         }
         // END OF NEW BLOCK
 

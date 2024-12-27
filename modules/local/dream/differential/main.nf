@@ -12,18 +12,18 @@ process DREAM_DIFFERENTIAL {
         'community.wave.seqera.io/library/bioconductor-edger_bioconductor-variancepartition_r-optparse:ba778938d72f30c5' }"
 
     input:
-    val meta // array with id, [...]
+    val meta                                                // array with id, variable, reference, target, blocking_factors, and more in the future.
     tuple val(meta2), path(samplesheet), path(intensities)
 
-    output: // TODO: COMPLETE OUTPUTS!
-    tuple val(meta), path("*.dream.results.tsv")          , emit: results
-    tuple val(meta), path("*.dream.mean_difference.png")  , emit: md_plot
-    tuple val(meta), path("*.MArrayMM.dream.rds")         , emit: rdata
-    tuple val(meta), path("*.dream.model.txt")            , emit: model
-    tuple val(meta), path('*.dream.contrasts_plot.png')   , emit: contrasts_png
-    tuple val(meta), path("*.R_sessionInfo.log")          , emit: session_info
-    tuple val(meta), path("*.normalised_counts.tsv")      , emit: normalised_counts, optional: true
-    path "versions.yml"                                   , emit: versions
+    output:
+    tuple val(meta), path("*.dream.results.tsv")        , emit: results
+    tuple val(meta), path("*.dream.mean_difference.png"), emit: md_plot
+    tuple val(meta), path("*.MArrayMM.dream.rds")       , emit: rdata
+    tuple val(meta), path("*.dream.model.txt")          , emit: model
+    tuple val(meta), path('*.dream.contrasts_plot.png') , emit: contrasts_png
+    tuple val(meta), path("*.R_sessionInfo.log")        , emit: session_info
+    tuple val(meta), path("*.normalised_counts.tsv")    , emit: normalised_counts, optional: true
+    path "versions.yml"                                 , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -33,7 +33,7 @@ process DREAM_DIFFERENTIAL {
     def blocking_factors       = meta.blocking_factors ? "--blocking_variables '${meta.blocking_factors.join(';')}'" : ''
     def exclude_samples_col    = meta.exclude_samples_col ? "--exclude_samples_col '${meta.exclude_samples_col.join(';')}'" : ''
     def exclude_samples_values = meta.exclude_samples_values ? "--exclude_samples_values '${meta.exclude_samples_values.join(';')}'" : ''
-    println("Meta is: ${meta}")
+
     """
     ## TODO: CHECK WHERE DO `exclude_samples_col` `exclude_samples_values` and `number` OPTIONS COME FROM!!
     dream_de.R  \\
@@ -53,38 +53,29 @@ process DREAM_DIFFERENTIAL {
     "${task.process}":
         r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
         r-optparse: \$(Rscript -e "library(optparse); cat(as.character(packageVersion('optparse')))")
-        r-edgeR: \$(edgeR -e "library(edgeR); cat(as.character(packageVersion('edgeR')))")
-        r-variancePartition: \$(Rscript -e "library(variancePartition); cat(as.character(packageVersion('variancePartition')))")
-        r-BiocParallel: \$(Rscript -e "library(BiocParallel); cat(as.character(packageVersion('BiocParallel')))")
+        r-edger: \$(Rscript -e "library(edgeR); cat(as.character(packageVersion('edgeR')))")
+        r-variancepartition: \$(Rscript -e "library(variancePartition); cat(as.character(packageVersion('variancePartition')))")
+        r-biocparallel: \$(Rscript -e "library(BiocParallel); cat(as.character(packageVersion('BiocParallel')))")
     END_VERSIONS
     """
 
-
-    stub: // TODO: COMPLETE STUB!
+    stub:
     prefix = task.ext.prefix   ?: "${meta.id}"
     """
-    #!/usr/bin/env Rscript
-    library(limma)
-    a <- file("${prefix}.dream.results.tsv", "w")
-    close(a)
-    a <- file("${prefix}.dream.mean_difference.png", "w")
-    close(a)
-    a <- file("${prefix}.MArrayLM.dream.rds", "w")
-    close(a)
-    a <- file("${prefix}.normalised_counts.tsv", "w")
-    close(a)
-    a <- file("${prefix}.dream.model.txt", "w")
-    close(a)
-    a <- file("${prefix}.R_sessionInfo.log", "w")
-    close(a)
+    touch "${prefix}.dream.results.tsv"
+    touch "${prefix}.dream.mean_difference.png"
+    touch "${prefix}.dream.contrasts_plot.png"
+    touch "${prefix}.MArrayMM.dream.rds"
+    touch "${prefix}.dream.model.txt"
+    touch "${prefix}.R_sessionInfo.log"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
         r-optparse: \$(Rscript -e "library(optparse); cat(as.character(packageVersion('optparse')))")
-        r-edgeR: \$(edgeR -e "library(edgeR); cat(as.character(packageVersion('edgeR')))")
-        r-variancePartition: \$(Rscript -e "library(variancePartition); cat(as.character(packageVersion('variancePartition')))")
-        r-BiocParallel: \$(Rscript -e "library(BiocParallel); cat(as.character(packageVersion('BiocParallel')))")
+        r-edger: \$(Rscript -e "library(edgeR); cat(as.character(packageVersion('edgeR')))")
+        r-variancepartition: \$(Rscript -e "library(variancePartition); cat(as.character(packageVersion('variancePartition')))")
+        r-piocparallel: \$(Rscript -e "library(BiocParallel); cat(as.character(packageVersion('BiocParallel')))")
     END_VERSIONS
     """
 }
