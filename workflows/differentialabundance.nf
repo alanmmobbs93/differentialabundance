@@ -410,13 +410,15 @@ workflow DIFFERENTIALABUNDANCE {
                 .flatMap{ meta, yml ->
                     YMLProcessing.parseContrastsFromYML(yml)
                 }
-                .tap{ ch_contrast_dream }
-                .view{ "== CONTRASTS YML CHANNEL == ${it} "}
+                .set{ ch_contrast_dream }
 
             DREAM_DIFFERENTIAL (
                 ch_contrast_dream,
                 ch_samples_and_matrix
             )
+
+            ch_versions = ch_versions.mix(DREAM_DIFFERENTIAL.out.versions)
+
         }
         // END OF NEW BLOCK
 
