@@ -134,6 +134,7 @@ include { GEOQUERY_GETGEO                                   } from '../modules/n
 include { ZIP as MAKE_REPORT_BUNDLE                         } from '../modules/nf-core/zip/main'
 include { softwareVersionsToYAML                            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { VALIDATE_MODEL                                    } from '../modules/local/validatemodel/main'
+include { DREAM_DIFFERENTIAL                                } from '../modules/local/dream/differential/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,8 +147,9 @@ workflow DIFFERENTIALABUNDANCE {
     main:
 
     ch_versions = Channel.empty()
+
     // Channel for the contrasts file
-    ch_contrasts_file = Channel.from([[exp_meta, file(params.contrasts)]])
+    ch_contrasts_file = Channel.from([[exp_meta, file(params.contrasts, checkIfExists: true)]])
 
 
     // Run module to validate models from yml file
@@ -401,6 +403,31 @@ workflow DIFFERENTIALABUNDANCE {
             .first()
 
     } else {
+
+        // TODO: MOVE THE MODULE TO THE CORRECT SPOT LATER!
+        if ( params.contrasts.endsWith(".yaml") || params.contrasts.endsWith(".yml") ) {
+
+            ch_contrasts_file
+                .flatMap{ meta, yml ->
+                    YMLProcessing.parseContrastsFromYML(yml)
+                }                                                       // returns array [ id: <name>, contrast_variable: <variable>, ... ]
+                .combine( ch_samples_and_matrix )                       // channel tuple [meta, samplesheet, filtered_matrix              ]
+                .map{
+                    meta_yml, meta_samplesheet, samplesheet, matrix ->  // TODO: We need to remove the 'meta' component from `ch_samples_and_matrix`,
+                        def meta = meta_samplesheet + meta_yml          //       Combine data from experiment (pipeline) + yml (contrasts)
+                        tuple(meta, samplesheet, matrix )               //       Check how to better hormonize these two 'meta' arrays
+                }
+                .set{ ch_contrast_dream }
+
+            DREAM_DIFFERENTIAL (
+                ch_contrast_dream
+            )
+
+            ch_versions = ch_versions.mix(DREAM_DIFFERENTIAL.out.versions)
+        }
+        // END OF NEW BLOCK
+
+
         DESEQ2_NORM (
             ch_contrasts.first(),
             ch_samples_and_matrix,
