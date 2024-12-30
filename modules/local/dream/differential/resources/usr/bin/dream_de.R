@@ -65,7 +65,7 @@ option_list <- list(
         help = "Target level for the contrast [default:  %default]"),
     make_option(c("--blocking_variables"), type = "character", default = NULL,
         help = "Blocking variables for the analysis [default: %default]"),
-    make_option(c("--sample_id_col"), type = "character", default = "experiment_accession",
+    make_option(c("--sample_id_col"), type = "character", default = "sample",
         help = "Column name for sample IDs [default: %default]"),
     make_option(c("--subset_to_contrast_samples"), type = "logical", default = FALSE,
         help = "Whether to subset to contrast samples [default: %default]"),
@@ -75,18 +75,10 @@ option_list <- list(
         help = "Values for excluding samples [default: %default]"),
     make_option(c("--threads"), type = "numeric", default = 1,
         help = "Number of threads for multithreading [default: %default]"),
-    make_option(c("--number"), type = "numeric", default = Inf,
-        help = "Maximum number of results [default: %default]"),
-    make_option(c("--ndups"), type = "numeric", default = NULL,
-        help = "Number of duplicates for lmFit [default: %default]"),
-    make_option(c("--spacing"), type = "numeric", default = NULL,
-        help = "Spacing for lmFit [default: %default]"),
-    make_option(c("--block"), type = "character", default = NULL,
-        help = "Block design for lmFit [default: %default]"),
-    make_option(c("--correlation"), type = "numeric", default = NULL,
-        help = "Correlation for lmFit [default: %default]"),
-    make_option(c("--method"), type = "character", default = "ls",
-        help = "Method for lmFit [default: %default]"),
+    make_option(c("--ddf"), type = "character", default = "adaptative", ## TODO: check for this condition!
+        help = "Specifiy 'Satterthwaite', 'Kenward-Roger', or 'adaptative' method for dream() [default: %default]"),
+    make_option(c("--reml"), type = "boolean", default = TRUE,
+        help = "Use restricted maximum likelihood to fit linear mixed model with dream() [default: %default]"),
     make_option(c("--proportion"), type = "numeric", default = 0.01,
         help = "Proportion for eBayes [default: %default]"),
     make_option(c("--stdev_coef_lim"), type = "character", default = "0.1,4",
@@ -130,6 +122,12 @@ for (file_input in c("count_file", "sample_file")) {
     if (!file.exists(opt[[file_input]])) {
         stop(paste0("Value of ", file_input, ": ", opt[[file_input]], " is not a valid file"), call. = FALSE)
     }
+}
+
+## Check default values for ddf options
+ddf_valid <- c("Satterthwaite", "Kenward-Roger", "adaptative")
+if ( !opt$ddf %in% ddf_valid ) {
+    stop(paste0("'--ddf ", opt$ddf, "' is not a valid option from '", paste(ddf_valid, collapse = "', '"), "'"), call. = FALSE)
 }
 
 # Convert specific options to numeric vectors
@@ -278,25 +276,33 @@ if ((! is.null(opt$exclude_samples_col)) && (! is.null(opt$exclude_samples_value
 ################################################
 ################################################
 
+## TODO: START ADAPTING TO DREAM IN HERE!
+## NEW STARTS HERE!
+
 # Build the model formula with blocking variables first
 model_vars <- c()
 
 if (!is.null(opt$blocking_variables)) {
     # Include blocking variables (including pairing variables if any)
-    model_vars <- c(model_vars, blocking.vars)
-}
+    for (VARIABLE in opt$blocking_variables) {
 
-# Add the contrast variable at the end
-model_vars <- c(model_vars, contrast_variable)
+        ## Create a string to reconstruct Wilkinson formula " (1 | variable )"
+        model_vars <- c(model_vars, paste0("(1 | ", VARIABLE, ")"))
+
+        ## Convert the variable into factor
+        if (!is.numeric(sample.sheet[[v]])) {
+            sample.sheet[[v]] <- as.factor(sample.sheet[[v]])
+        }
+    }
+}
 
 # Construct the model formula
-model <- paste('~ 0 +', paste(model_vars, collapse = '+'))
+## Expected structure:
+## "~ 0 + fixed_effect + (1 | random_variable_1) + (1 | random_variable_N)"
+model <- paste('~ 0', contrast_variable, paste(model_vars, collapse = ' + '), sep = " + ")  ## TODO: This is limited to additive models! not possible for interaction relations
 
-# Make sure all the appropriate variables are factors
-vars_to_factor <- model_vars  # All variables in the model need to be factors
-for (v in vars_to_factor) {
-    sample.sheet[[v]] <- as.factor(sample.sheet[[v]])
-}
+# Construct the formula
+form <- as.formula(model)
 
 ################################################
 ################################################
@@ -306,19 +312,12 @@ for (v in vars_to_factor) {
 
 # Generate the design matrix
 design <- model.matrix(
-    as.formula(model),
-    data=sample.sheet
+    formula = form,
+    data    = sample.sheet
 )
-
-## TODO: START ADAPTING TO DREAM IN HERE!
-## NEW STARTS HERE!
 
 # Specify parallel processing
 param <- SnowParam(as.numeric(opt$threads), "SOCK", progressbar = TRUE)
-
-## Set formula
-#form <- ~ Disease + (1 | Individual)
-form <- as.formula(model)
 
 # Create a DGEList object for RNA-seq data
 dge <- DGEList(counts = intensities.table)
@@ -329,24 +328,37 @@ dge <- calcNormFactors(dge)
 # estimate weights using linear mixed model of dream
 vobjDream <- voomWithDreamWeights(dge, form, sample.sheet, BPPARAM = param)
 
-# Fit the dream model on each gene
-# For the hypothesis testing, by default,
-# dream() uses the KR method for <= 20 samples,
-# otherwise it uses the Satterthwaite approximation
+# Create and export variance plot
+vp <- fitExtractVarPartModel(vobjDream, form, sample.sheet)
+var_plot <- plotVarPart(sortCols(vp))
 
-## TODO: this is the placeholder for `L = makeContrastsDream(...)` function, whose object should be included with `L` argument in dream() function
-L <- variancePartition::makeContrastsDream(form, sample.sheet,
-    contrasts = c(
-        setNames(paste(
-            paste0(opt$contrast_variable, opt$target_level),
-            paste0(opt$contrast_variable, opt$reference_level),
-            sep = " - "), opt$output_prefix)
+png(
+    file = paste(opt$output_prefix, 'dream.var_plot.png', sep = '.'),
+    width = 600,
+    height = 300
+)
+
+plot(var_plot)
+dev.off()
+
+## Set contrast (this can be scaled for more than one comparison)
+L <- variancePartition::makeContrastsDream(
+    form,
+    sample.sheet,
+    contrasts = c(                                                      ## This is a named vector for all the contrast we'd like to run.
+        setNames(                                                       ## For now, it's just one contrast but we should be able to scale it with the yml somehow
+            paste(                                                      ## For a variable named `treatment`, with levels A and B
+                paste0(opt$contrast_variable, opt$target_level),            ## Create target value: treatmentB
+                paste0(opt$contrast_variable, opt$reference_level),         ## Create reference value: treatmentA
+                sep = " - "),                                               ## Set a difference between them
+            opt$output_prefix)                                          ## Assign the name to the comparison (`contrast id`` from the yml)
         )
     )
 
 # Visualize contrast matrix
 contrasts_plot <- plotContrasts(L)
 
+# Export contrast plot
 png(
     file = paste(opt$output_prefix, 'dream.contrasts_plot.png', sep = '.'),
     width = 600,
@@ -355,14 +367,54 @@ png(
 plot(contrasts_plot)
 dev.off()
 
-# fit dream model with contrasts
-fitmm <- dream(vobjDream, form, sample.sheet, L)
-fitmm <- variancePartition::eBayes(fitmm)
+## TODO: Check if the model is mixed or not, could be useful to report it later
+( mixed_form <- isMixedModelFormula(form) )
+
+# Fit the dream model on each gene
+# For the hypothesis testing, by default,
+# dream() uses the KR method for <= 20 samples,
+# otherwise it uses the Satterthwaite approximation (this is the behavior indicated with `ddf = adaptative`)
+# We can force it to use the others methods with is ddf argument
+
+fitmm <-
+    dream(
+        exprObj = vobjDream,
+        formula = form,
+        data    = sample.sheet,
+        L       = L,
+        ddf     = opt$ddf,
+        reml    = opt$reml
+    )
+
+# Adjust results with Empirical Bayes
+## Create list of arguments for eBayes
+ebayes_args <- list(
+    fit = fitmm
+)
+
+if (! is.null(opt$proportion)){
+    ebayes_args[['proportion']] <- as.numeric(opt$proportion)
+}
+if (! is.null(opt$stdev.coef.lim)){
+    ebayes_args[['stdev.coef.lim']] <- as.numeric(opt$stdev.coef.lim)
+}
+if (! is.null(opt$trend)){
+    ebayes_args[['trend']] <- as.logical(opt$trend)
+}
+if (! is.null(opt$robust)){
+    ebayes_args[['robust']] <- as.logical(opt$robust)
+}
+if (! is.null(opt$winsor.tail.p)){
+    ebayes_args[['winsor.tail.p']] <- as.numeric(opt$winsor.tail.p)
+}
+
+## Run variancePartition::eBayes
+fitmm <- do.call(variancePartition::eBayes, ebayes_args)
 
 # get names of available coefficients and contrasts for testing
 colnames(fitmm)
 
-# Get results of hypothesis test on coefficients of interest
+# Get results of hypothesis test on coefficients of interest (only one coeff for now)
 for (COEFFICIENT in opt$output_prefix) {
 
     ## Initialize topTable() arguments
@@ -373,7 +425,7 @@ for (COEFFICIENT in opt$output_prefix) {
         number = nrow(intensities.table)
     )
 
-    ## Complete list with extra arguments if they were provided
+    ## Complete list with extra arguments, if they were provided
     if (! is.null(opt$adjust.method)){
         toptable_args[['adjust.method']] <- opt$adjust.method
     }
@@ -388,7 +440,7 @@ for (COEFFICIENT in opt$output_prefix) {
     }
 
     ## generate topTable
-    comp.results <- do.call(topTable, toptable_args)[rownames(intensities.table),]
+    comp.results <- do.call(variancePartition::topTable, toptable_args)[rownames(intensities.table),]
 
     ## Export topTable
     write.table(
@@ -405,7 +457,7 @@ for (COEFFICIENT in opt$output_prefix) {
 
 ################################################
 ################################################
-## Generate outputs                           ##
+## Generate other outputs                     ##
 ################################################
 ################################################
 

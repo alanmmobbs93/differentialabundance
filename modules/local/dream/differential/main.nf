@@ -21,6 +21,7 @@ process DREAM_DIFFERENTIAL {
     tuple val(meta), path("*.MArrayMM.dream.rds")       , emit: rdata
     tuple val(meta), path("*.dream.model.txt")          , emit: model
     tuple val(meta), path('*.dream.contrasts_plot.png') , emit: contrasts_png
+    tuple val(meta), path('*.dream.var_plot.png')       , emit: contrasts_png
     tuple val(meta), path("*.R_sessionInfo.log")        , emit: session_info
     tuple val(meta), path("*.normalised_counts.tsv")    , emit: normalised_counts, optional: true
     path "versions.yml"                                 , emit: versions
