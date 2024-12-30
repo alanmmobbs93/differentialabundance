@@ -147,8 +147,9 @@ workflow DIFFERENTIALABUNDANCE {
     main:
 
     ch_versions = Channel.empty()
+
     // Channel for the contrasts file
-    ch_contrasts_file = Channel.from([[exp_meta, file(params.contrasts)]])
+    ch_contrasts_file = Channel.from([[exp_meta, file(params.contrasts, checkIfExists: true)]])
 
 
     // Run module to validate models from yml file
@@ -409,12 +410,17 @@ workflow DIFFERENTIALABUNDANCE {
             ch_contrasts_file
                 .flatMap{ meta, yml ->
                     YMLProcessing.parseContrastsFromYML(yml)
+                }                                                       // returns array [ id: <name>, contrast_variable: <variable>, ... ]
+                .combine( ch_samples_and_matrix )                       // channel tuple [meta, samplesheet, filtered_matrix              ]
+                .map{
+                    meta_yml, meta_samplesheet, samplesheet, matrix ->  // TODO: We need to remove the 'meta' component from `ch_samples_and_matrix`,
+                        def meta = meta_samplesheet + meta_yml          //       Combine data from experiment (pipeline) + yml (contrasts)
+                        tuple(meta, samplesheet, matrix )               //       Check how to better hormonize these two 'meta' arrays
                 }
                 .set{ ch_contrast_dream }
 
             DREAM_DIFFERENTIAL (
-                ch_contrast_dream,
-                ch_samples_and_matrix
+                ch_contrast_dream
             )
 
             ch_versions = ch_versions.mix(DREAM_DIFFERENTIAL.out.versions)

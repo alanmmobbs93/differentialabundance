@@ -3,17 +3,16 @@
 //      or should it be able to take the yaml file and parse it on its own?
 
 process DREAM_DIFFERENTIAL {
-    tag "${meta.id}"
+    tag "${meta.id} - ${meta.contrast_id}"
     label 'process_single'
 
-    conda "${moduleDir}/environment.yml" // TODO: COMPLETE THIS TOO!
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/d6/d6fa8a7908dd357484d63bb574a378f1739440a2c0752ce91b1e0e9d1ac1638c/data' :
         'community.wave.seqera.io/library/bioconductor-edger_bioconductor-variancepartition_r-optparse:ba778938d72f30c5' }"
 
     input:
-    val meta                                                // array with id, variable, reference, target, blocking_factors, and more in the future.
-    tuple val(meta2), path(samplesheet), path(intensities)
+    tuple val(meta), path(samplesheet), path(counts)
 
     output:
     tuple val(meta), path("*.dream.results.tsv")        , emit: results
@@ -33,16 +32,14 @@ process DREAM_DIFFERENTIAL {
     def blocking_factors       = meta.blocking_factors ? "--blocking_variables '${meta.blocking_factors.join(';')}'" : ''
     def exclude_samples_col    = meta.exclude_samples_col ? "--exclude_samples_col '${meta.exclude_samples_col.join(';')}'" : ''
     def exclude_samples_values = meta.exclude_samples_values ? "--exclude_samples_values '${meta.exclude_samples_values.join(';')}'" : ''
-
     """
-    ## TODO: CHECK WHERE DO `exclude_samples_col` `exclude_samples_values` and `number` OPTIONS COME FROM!!
     dream_de.R  \\
-        --output_prefix ${prefix} \\
-        --count_file ${intensities} \\
+        --output_prefix ${meta.contrast_id} \\
+        --count_file ${counts} \\
         --sample_file ${samplesheet} \\
         --contrast_variable ${meta.contrast_variable} \\
-        --reference_level ${meta.reference} \\
-        --target_level ${meta.target} \\
+        --reference_level ${meta.contrast_reference} \\
+        --target_level ${meta.contrast_target} \\
         ${blocking_factors} \\
         ${exclude_samples_col} \\
         ${exclude_samples_values} \\
@@ -62,12 +59,12 @@ process DREAM_DIFFERENTIAL {
     stub:
     prefix = task.ext.prefix   ?: "${meta.id}"
     """
-    touch "${prefix}.dream.results.tsv"
-    touch "${prefix}.dream.mean_difference.png"
-    touch "${prefix}.dream.contrasts_plot.png"
-    touch "${prefix}.MArrayMM.dream.rds"
-    touch "${prefix}.dream.model.txt"
-    touch "${prefix}.R_sessionInfo.log"
+    touch "${meta.contrast_id}.dream.results.tsv"
+    touch "${meta.contrast_id}.dream.mean_difference.png"
+    touch "${meta.contrast_id}.dream.contrasts_plot.png"
+    touch "${meta.contrast_id}.MArrayMM.dream.rds"
+    touch "${meta.contrast_id}.dream.model.txt"
+    touch "${meta.contrast_id}.R_sessionInfo.log"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
