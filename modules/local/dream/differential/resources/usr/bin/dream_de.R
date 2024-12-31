@@ -172,10 +172,9 @@ opt[vector_opt] <- lapply(strsplit(unlist(opt[vector_opt]), ","), as.numeric)
 # Save first version of RData, useful for debuging with all original parameters already set
 cat("Exporting preliminary RData\n")
 
-work_dir <- getwd()  ## for dev purposes
-#work_dir <- "/workspace/differentialabundance/.nf-test/tests/8e59e4416c387ccf4c4422737e6af6c5/work/e6/e26f7e844ae8d4da05284db2ab2130"
+work_dir <- getwd()                         ## for dev purposes
 save.image("dream_de.RData")
-#setwd(work_dir); load("dream_de.RData")
+#setwd(work_dir); load("dream_de.RData")    ## for dev purposes
 
 ################################################
 ################################################
