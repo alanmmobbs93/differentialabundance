@@ -290,7 +290,7 @@ if (!is.null(opt\$blocking_variables)) {
 model_vars <- c(model_vars, contrast_variable)
 
 # Construct the model formula
-model <- paste('~ 0 +', paste(model_vars, collapse = '+'))                          ## WHY FORCING THE INTERSECTION? NOT RECOMMENDED FOR COFACTOS (or continuous variables)
+model <- paste('~ 0 +', paste(model_vars, collapse = '+'))
 
 # Make sure all the appropriate variables are factors
 vars_to_factor <- model_vars  # All variables in the model need to be factors

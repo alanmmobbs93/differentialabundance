@@ -5,10 +5,10 @@
                 "0": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.results.tsv:md5,bd28cb586bb40ad9f0b7069cb3ada0a2"
@@ -17,10 +17,10 @@
                 "1": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.mean_difference.png:md5,0d1c235cca14dcf75af4ef6cb66247ae"
@@ -29,10 +29,10 @@
                 "2": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.MArrayMM.dream.rds:md5,9197daf020341f1fc92636c762cb40e0"
@@ -41,10 +41,10 @@
                 "3": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.model.txt:md5,d2113d82b76046c319e6602da2ad74d6"
@@ -53,10 +53,10 @@
                 "4": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.contrasts_plot.png:md5,1fab14c3a7fb300bc6d8e693ef75cf27"
@@ -65,10 +65,10 @@
                 "5": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.R_sessionInfo.log:md5,e591353ef3f5d63a74889d57f7ce37c6"
@@ -83,10 +83,10 @@
                 "contrasts_png": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.contrasts_plot.png:md5,1fab14c3a7fb300bc6d8e693ef75cf27"
@@ -95,10 +95,10 @@
                 "md_plot": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.mean_difference.png:md5,0d1c235cca14dcf75af4ef6cb66247ae"
@@ -107,10 +107,10 @@
                 "model": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.model.txt:md5,d2113d82b76046c319e6602da2ad74d6"
@@ -122,10 +122,10 @@
                 "rdata": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.MArrayMM.dream.rds:md5,9197daf020341f1fc92636c762cb40e0"
@@ -134,10 +134,10 @@
                 "results": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.results.tsv:md5,bd28cb586bb40ad9f0b7069cb3ada0a2"
@@ -146,10 +146,10 @@
                 "session_info": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.R_sessionInfo.log:md5,e591353ef3f5d63a74889d57f7ce37c6"
@@ -164,7 +164,7 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2024-12-27T18:45:31.211486573"
+        "timestamp": "2024-12-30T20:26:00.880207486"
     },
     "Mus musculus - expression table - contrasts + blocking factors stub": {
         "content": [
@@ -172,10 +172,10 @@
                 "0": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.results.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -184,10 +184,10 @@
                 "1": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.mean_difference.png:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -196,10 +196,10 @@
                 "2": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.MArrayMM.dream.rds:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -208,10 +208,10 @@
                 "3": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.model.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -220,10 +220,10 @@
                 "4": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.contrasts_plot.png:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -232,10 +232,10 @@
                 "5": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.R_sessionInfo.log:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -250,10 +250,10 @@
                 "contrasts_png": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.contrasts_plot.png:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -262,10 +262,10 @@
                 "md_plot": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.mean_difference.png:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -274,10 +274,10 @@
                 "model": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.model.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -289,10 +289,10 @@
                 "rdata": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.MArrayMM.dream.rds:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -301,10 +301,10 @@
                 "results": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.dream.results.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -313,10 +313,10 @@
                 "session_info": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": "sample_number"
                         },
                         "treatment_mCherry_hND6.R_sessionInfo.log:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -331,7 +331,7 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2024-12-27T18:46:04.900211679"
+        "timestamp": "2024-12-30T20:26:19.298663118"
     },
     "Mus musculus - expression table - contrasts": {
         "content": [
@@ -339,10 +339,10 @@
                 "0": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.dream.results.tsv:md5,bd28cb586bb40ad9f0b7069cb3ada0a2"
@@ -351,10 +351,10 @@
                 "1": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.dream.mean_difference.png:md5,0d1c235cca14dcf75af4ef6cb66247ae"
@@ -363,10 +363,10 @@
                 "2": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.MArrayMM.dream.rds:md5,9197daf020341f1fc92636c762cb40e0"
@@ -375,10 +375,10 @@
                 "3": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.dream.model.txt:md5,d2113d82b76046c319e6602da2ad74d6"
@@ -387,10 +387,10 @@
                 "4": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.dream.contrasts_plot.png:md5,1fab14c3a7fb300bc6d8e693ef75cf27"
@@ -399,10 +399,10 @@
                 "5": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.R_sessionInfo.log:md5,e591353ef3f5d63a74889d57f7ce37c6"
@@ -417,10 +417,10 @@
                 "contrasts_png": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.dream.contrasts_plot.png:md5,1fab14c3a7fb300bc6d8e693ef75cf27"
@@ -429,10 +429,10 @@
                 "md_plot": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.dream.mean_difference.png:md5,0d1c235cca14dcf75af4ef6cb66247ae"
@@ -441,10 +441,10 @@
                 "model": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.dream.model.txt:md5,d2113d82b76046c319e6602da2ad74d6"
@@ -456,10 +456,10 @@
                 "rdata": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.MArrayMM.dream.rds:md5,9197daf020341f1fc92636c762cb40e0"
@@ -468,10 +468,10 @@
                 "results": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.dream.results.tsv:md5,bd28cb586bb40ad9f0b7069cb3ada0a2"
@@ -480,10 +480,10 @@
                 "session_info": [
                     [
                         {
-                            "id": "treatment_mCherry_hND6",
+                            "contrast_id": "treatment_mCherry_hND6",
                             "contrast_variable": "treatment",
-                            "reference": "mCherry",
-                            "target": "hND6",
+                            "contrast_reference": "mCherry",
+                            "contrast_target": "hND6",
                             "blocking_factors": null
                         },
                         "treatment_mCherry_hND6.R_sessionInfo.log:md5,e591353ef3f5d63a74889d57f7ce37c6"
@@ -498,6 +498,6 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.3"
         },
-        "timestamp": "2024-12-27T18:44:52.310595802"
+        "timestamp": "2024-12-30T20:25:38.453221214"
     }
 }
