@@ -5,6 +5,7 @@
 ## Functions                                  ##
 ################################################
 ################################################
+cat("Initializing functions\n")
 
 #' Flexibly read CSV or TSV files
 #'
@@ -42,12 +43,44 @@ read_delim_flexible <- function(file, header = TRUE, row.names = NULL, check.nam
     return(df)
 }
 
+#' Check if a formula contains mixed model components (random effects)
+#'
+#' This function checks if a given formula contains random effects (e.g., terms like `(1|group)`)
+#' by internally using the `findbars()` function to identify random effect terms.
+#' Duplicated from `variancePartition` package, to avoid relying on an internal function
+#'
+#' @param formula A formula object. For example, `~ condition + (1|group)`.
+#'
+#' @return A logical value: `TRUE` if the formula contains random effects, otherwise `FALSE`.
+#'
+#' @details The function checks for the presence of random effects in the formula by looking for
+#'          terms that include a `|` symbol, which indicates random effects in a mixed model.
+#'          The `findbars()` function is defined internally to identify these terms.
+#'
+#' @examples
+#' # Example formula with random effects
+#' form <- ~ 0 + condition + (1|group)
+#' is_mixed <- my_isMixedModelFormula(form)
+#' print(is_mixed)  # Output: TRUE
+#'
+#' # Example formula without random effects
+#' form_no_random <- ~ 0 + condition
+#' is_mixed_no_random <- my_isMixedModelFormula(form_no_random)
+#' print(is_mixed_no_random)  # Output: FALSE
+
+isMixedModelFormula <- function(formula) {
+
+    !is.null(lme4::findbars(as.formula(formula)))
+
+}
+
 ################################################
 ################################################
 ## PARSE PARAMETERS FROM NEXTFLOW             ##
 ################################################
 ################################################
 library(optparse)
+cat("Parsing arguments\n")
 
 # Define the full list of options
 option_list <- list(
@@ -58,7 +91,7 @@ option_list <- list(
     make_option(c("-s", "--sample_file"), type = "character", default = NULL,
         help = "File containing sample information [default:  %default]"),
     make_option(c("--contrast_variable"), type = "character", default = NULL,
-        help = "Variable for contrast [default:  %default"),
+        help = "Variable for contrast [default:  %default]"),
     make_option(c("--reference_level"), type = "character", default = NULL,
         help = "Reference level for the contrast [default:  %default]"),
     make_option(c("--target_level"), type = "character", default = NULL,
@@ -75,9 +108,9 @@ option_list <- list(
         help = "Values for excluding samples [default: %default]"),
     make_option(c("--threads"), type = "numeric", default = 1,
         help = "Number of threads for multithreading [default: %default]"),
-    make_option(c("--ddf"), type = "character", default = "adaptative", ## TODO: check for this condition!
+    make_option(c("--ddf"), type = "character", default = "adaptive",
         help = "Specifiy 'Satterthwaite', 'Kenward-Roger', or 'adaptative' method for dream() [default: %default]"),
-    make_option(c("--reml"), type = "boolean", default = TRUE,
+    make_option(c("--reml"), type = "logical", default = TRUE,
         help = "Use restricted maximum likelihood to fit linear mixed model with dream() [default: %default]"),
     make_option(c("--proportion"), type = "numeric", default = 0.01,
         help = "Proportion for eBayes [default: %default]"),
@@ -110,6 +143,8 @@ It requires the following input files:
 opt <- parse_args(OptionParser(option_list = option_list, description = description))
 
 # Check if required parameters have been provided
+cat("Validating required arguments\n")
+
 required_opts <- c("contrast_variable", "reference_level", "target_level", "output_prefix", "count_file", "sample_file")
 missing <- required_opts[sapply(required_opts, function(o) is.null(opt[[o]]))]
 
@@ -125,7 +160,7 @@ for (file_input in c("count_file", "sample_file")) {
 }
 
 ## Check default values for ddf options
-ddf_valid <- c("Satterthwaite", "Kenward-Roger", "adaptative")
+ddf_valid <- c("Satterthwaite", "Kenward-Roger", "adaptive")
 if ( !opt$ddf %in% ddf_valid ) {
     stop(paste0("'--ddf ", opt$ddf, "' is not a valid option from '", paste(ddf_valid, collapse = "', '"), "'"), call. = FALSE)
 }
@@ -135,20 +170,21 @@ vector_opt <- c("stdev_coef_lim", "winsor_tail_p")
 opt[vector_opt] <- lapply(strsplit(unlist(opt[vector_opt]), ","), as.numeric)
 
 # Save first version of RData, useful for debuging with all original parameters already set
+cat("Exporting preliminary RData\n")
+
+work_dir <- getwd()  ## for dev purposes
 save.image("dream_de.RData")
+#setwd(work_dir); load("dream_de.RData")
 
 ################################################
 ################################################
 ## Finish loading libraries                   ##
 ################################################
 ################################################
+cat("Importing libraries\n")
 
 library(edgeR)
 library(variancePartition)
-
-## Load RData (for dev purposes)
-#setwd("/workspace/differentialabundance/results/work/fe/264e25e728b3300231e7d393e939f4")
-#load("dream_de.RData")
 
 ################################################
 ################################################
@@ -168,7 +204,6 @@ if (! opt$sample_id_col %in% colnames(sample.sheet)){
 
 # Sample sheet can have duplicate rows for multiple sequencing runs, so uniqify
 # before assigning row names
-
 sample.sheet <- sample.sheet[! duplicated(sample.sheet[[opt$sample_id_col]]), ]
 rownames(sample.sheet) <- sample.sheet[[opt$sample_id_col]]
 
@@ -197,6 +232,7 @@ if (length(missing_samples) > 0) {
 ## CHECK CONTRAST SPECIFICATION               ##
 ################################################
 ################################################
+cat("Validating contrasts\n")
 
 contrast_variable <- make.names(opt$contrast_variable)
 blocking.vars <- c()
@@ -278,20 +314,25 @@ if ((! is.null(opt$exclude_samples_col)) && (! is.null(opt$exclude_samples_value
 
 ## TODO: START ADAPTING TO DREAM IN HERE!
 ## NEW STARTS HERE!
+cat("Creating formula\n")
 
 # Build the model formula with blocking variables first
 model_vars <- c()
 
 if (!is.null(opt$blocking_variables)) {
+    cat("opt$blocking_variables:", paste(opt$blocking_variables, collapse = ' '), "\n")
+    print(opt$blocking_variables)
+
     # Include blocking variables (including pairing variables if any)
     for (VARIABLE in opt$blocking_variables) {
-
+        cat("Adding", VARIABLE, "factor to formula\n")
         ## Create a string to reconstruct Wilkinson formula " (1 | variable )"
         model_vars <- c(model_vars, paste0("(1 | ", VARIABLE, ")"))
 
         ## Convert the variable into factor
-        if (!is.numeric(sample.sheet[[v]])) {
-            sample.sheet[[v]] <- as.factor(sample.sheet[[v]])
+        if (!is.numeric(sample.sheet[[ VARIABLE ]])) {
+            cat("Converting into factor\n")
+            sample.sheet[[ VARIABLE ]] <- as.factor(sample.sheet[[ VARIABLE ]])
         }
     }
 }
@@ -299,10 +340,22 @@ if (!is.null(opt$blocking_variables)) {
 # Construct the model formula
 ## Expected structure:
 ## "~ 0 + fixed_effect + (1 | random_variable_1) + (1 | random_variable_N)"
-model <- paste('~ 0', contrast_variable, paste(model_vars, collapse = ' + '), sep = " + ")  ## TODO: This is limited to additive models! not possible for interaction relations
+model <- paste(
+    '~ 0 + ',
+    contrast_variable,
+    if (length(model_vars) > 0) { paste0(" +", paste(model_vars, collapse = ' + ')) } else { NULL },
+    sep = "")  ## TODO: This is limited to additive models! not possible for interaction relations
+
+cat("Model vars:", model_vars, "\n")
+cat("Model:", model, "\n")
 
 # Construct the formula
 form <- as.formula(model)
+cat("Formula:", deparse(form), "\n")
+
+## TODO: Check if the model is mixed or not, could be useful to report it later
+cat("Checking for mixed formula\n")
+mixed_form <- isMixedModelFormula(form)
 
 ################################################
 ################################################
@@ -311,37 +364,46 @@ form <- as.formula(model)
 ################################################
 
 # Generate the design matrix
+cat("Creating design matrix\n")
+
 design <- model.matrix(
-    formula = form,
-    data    = sample.sheet
+    form,
+    sample.sheet
 )
 
 # Specify parallel processing
 param <- SnowParam(as.numeric(opt$threads), "SOCK", progressbar = TRUE)
 
 # Create a DGEList object for RNA-seq data
+cat("Creating DGEList\n")
 dge <- DGEList(counts = intensities.table)
 
 ## Calculate normalization factors
+cat("Calculating normalization factors\n")
 dge <- calcNormFactors(dge)
 
 # estimate weights using linear mixed model of dream
+cat("Normalizing data\n")
 vobjDream <- voomWithDreamWeights(dge, form, sample.sheet, BPPARAM = param)
 
 # Create and export variance plot
-vp <- fitExtractVarPartModel(vobjDream, form, sample.sheet)
+cat("Analyzing variance\n")
+vp <- fitExtractVarPartModel(exprObj = vobjDream, formula = form, data = sample.sheet, REML = opt$reml)
+
+cat("Creating variance plot\n")
 var_plot <- plotVarPart(sortCols(vp))
 
+cat("Exporting variance plot\n")
 png(
     file = paste(opt$output_prefix, 'dream.var_plot.png', sep = '.'),
     width = 600,
     height = 300
 )
-
 plot(var_plot)
 dev.off()
 
 ## Set contrast (this can be scaled for more than one comparison)
+cat("Building contrasts\n")
 L <- variancePartition::makeContrastsDream(
     form,
     sample.sheet,
@@ -356,6 +418,7 @@ L <- variancePartition::makeContrastsDream(
     )
 
 # Visualize contrast matrix
+cat("Creating and exporting contrast plot\n")
 contrasts_plot <- plotContrasts(L)
 
 # Export contrast plot
@@ -367,15 +430,13 @@ png(
 plot(contrasts_plot)
 dev.off()
 
-## TODO: Check if the model is mixed or not, could be useful to report it later
-( mixed_form <- isMixedModelFormula(form) )
 
 # Fit the dream model on each gene
 # For the hypothesis testing, by default,
 # dream() uses the KR method for <= 20 samples,
 # otherwise it uses the Satterthwaite approximation (this is the behavior indicated with `ddf = adaptative`)
 # We can force it to use the others methods with is ddf argument
-
+cat("Fitting model with dream()\n")
 fitmm <-
     dream(
         exprObj = vobjDream,
@@ -388,6 +449,7 @@ fitmm <-
 
 # Adjust results with Empirical Bayes
 ## Create list of arguments for eBayes
+cat("Adjusting results with eBayes\n")
 ebayes_args <- list(
     fit = fitmm
 )
@@ -415,6 +477,7 @@ fitmm <- do.call(variancePartition::eBayes, ebayes_args)
 colnames(fitmm)
 
 # Get results of hypothesis test on coefficients of interest (only one coeff for now)
+cat("Exporting results with topTable()\n")
 for (COEFFICIENT in opt$output_prefix) {
 
     ## Initialize topTable() arguments
