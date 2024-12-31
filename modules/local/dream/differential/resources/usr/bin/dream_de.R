@@ -173,6 +173,7 @@ opt[vector_opt] <- lapply(strsplit(unlist(opt[vector_opt]), ","), as.numeric)
 cat("Exporting preliminary RData\n")
 
 work_dir <- getwd()  ## for dev purposes
+#work_dir <- "/workspace/differentialabundance/.nf-test/tests/8e59e4416c387ccf4c4422737e6af6c5/work/e6/e26f7e844ae8d4da05284db2ab2130"
 save.image("dream_de.RData")
 #setwd(work_dir); load("dream_de.RData")
 
@@ -341,7 +342,7 @@ if (!is.null(opt$blocking_variables)) {
 ## Expected structure:
 ## "~ 0 + fixed_effect + (1 | random_variable_1) + (1 | random_variable_N)"
 model <- paste(
-    '~ 0 + ',
+    '~ 0 +',
     contrast_variable,
     if (length(model_vars) > 0) { paste0(" +", paste(model_vars, collapse = ' + ')) } else { NULL },
     sep = "")  ## TODO: This is limited to additive models! not possible for interaction relations
@@ -388,7 +389,7 @@ vobjDream <- voomWithDreamWeights(dge, form, sample.sheet, BPPARAM = param)
 
 # Create and export variance plot
 cat("Analyzing variance\n")
-vp <- fitExtractVarPartModel(exprObj = vobjDream, formula = form, data = sample.sheet, REML = opt$reml)
+vp <- fitExtractVarPartModel(exprObj = intensities.table, formula = update(form, ~ . - 0), data = sample.sheet, REML = opt$reml)
 
 cat("Creating variance plot\n")
 var_plot <- plotVarPart(sortCols(vp))
@@ -434,7 +435,7 @@ dev.off()
 # Fit the dream model on each gene
 # For the hypothesis testing, by default,
 # dream() uses the KR method for <= 20 samples,
-# otherwise it uses the Satterthwaite approximation (this is the behavior indicated with `ddf = adaptative`)
+# otherwise it uses the Satterthwaite approximation (this is the behavior indicated with `ddf = adaptive`)
 # We can force it to use the others methods with is ddf argument
 cat("Fitting model with dream()\n")
 fitmm <-
