@@ -47,7 +47,7 @@ read_delim_flexible <- function(file, header = TRUE, row.names = NULL, check.nam
 #'
 #' This function checks if a given formula contains random effects (e.g., terms like `(1|group)`)
 #' by internally using the `findbars()` function to identify random effect terms.
-#' Duplicated from `variancePartition` package, to avoid relying on an internal function
+#' Duplicated from `variancePartition:::.isMixedModelFormula()`, to avoid relying on an internal function
 #'
 #' @param formula A formula object. For example, `~ condition + (1|group)`.
 #'
