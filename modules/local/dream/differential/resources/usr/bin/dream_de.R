@@ -135,7 +135,7 @@ option_list <- list(
 # Parse options
 description <-
 "This script performs differential gene expression analysis using the R 'dream' package from 'variancePartition'.\n\n
-It requires the following input files:
+It requires the following inputs:
     1. A counts table (gene expression data)
     2. A variable, reference and contrast levels (for specifying the contrasts in the analysis)
     3. A sample sheet (sample metadata and experimental setup)."
@@ -162,7 +162,13 @@ for (file_input in c("count_file", "sample_file")) {
 ## Check default values for ddf options
 ddf_valid <- c("Satterthwaite", "Kenward-Roger", "adaptive")
 if ( !opt$ddf %in% ddf_valid ) {
-    stop(paste0("'--ddf ", opt$ddf, "' is not a valid option from '", paste(ddf_valid, collapse = "', '"), "'"), call. = FALSE)
+    stop(paste0("'--ddf '", opt$ddf, "' is not a valid option from '", paste(ddf_valid, collapse = "', '"), "'"), call. = FALSE)
+}
+
+## Check adjust method options
+adjust_valid <- c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr")
+if (!opt$adjust_method %in% adjust_valid && !is.null(opt$adjust_method)) {
+        stop(paste0("'--adjust_method '", opt$adjust_method, "' is not a valid option from '", paste(adjust_valid, collapse = "', '"), "', or NULL"), call. = FALSE)
 }
 
 # Convert specific options to numeric vectors
@@ -490,10 +496,10 @@ for (COEFFICIENT in opt$output_prefix) {
 
     ## Complete list with extra arguments, if they were provided
     if (! is.null(opt$adjust.method)){
-        toptable_args[['adjust.method']] <- opt$adjust.method
+        toptable_args[['adjust.method']] <- opt$adjust_method
     }
     if (! is.null(opt$p.value)){
-        toptable_args[['p.value']] <- as.numeric(opt$p.value)
+        toptable_args[['p.value']] <- as.numeric(opt$p_value)
     }
     if (! is.null(opt$lfc)){
         toptable_args[['lfc']] <- as.numeric(opt$lfc)

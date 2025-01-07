@@ -33,6 +33,7 @@ process DREAM_DIFFERENTIAL {
     def blocking_factors       = meta.blocking_factors ? "--blocking_variables '${meta.blocking_factors.join(';')}'" : ''
     def exclude_samples_col    = meta.exclude_samples_col ? "--exclude_samples_col '${meta.exclude_samples_col.join(';')}'" : ''
     def exclude_samples_values = meta.exclude_samples_values ? "--exclude_samples_values '${meta.exclude_samples_values.join(';')}'" : ''
+    def args                   = task.ext.args ?: ''
     """
     dream_de.R  \\
         --output_prefix ${meta.contrast_id} \\
@@ -44,7 +45,8 @@ process DREAM_DIFFERENTIAL {
         ${blocking_factors} \\
         ${exclude_samples_col} \\
         ${exclude_samples_values} \\
-        --threads ${task.cpus}
+        --threads ${task.cpus} \\
+        ${args}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
